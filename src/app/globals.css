@@ -1,32 +1,35 @@
 @import "tailwindcss";
 
+/* aktif class-based dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-border: hsl(217.2 32.6% 17.5%);
   --color-input: hsl(217.2 32.6% 17.5%);
   --color-ring: hsl(217.2 91.2% 59.8%);
-  
+
   --color-background: #090d16;
   --color-foreground: #f8fafc;
-  
+
   --color-primary: #3b82f6;
   --color-primary-foreground: #ffffff;
-  
+
   --color-secondary: #1e293b;
   --color-secondary-foreground: #f8fafc;
-  
+
   --color-card: #0e1626;
   --color-card-foreground: #f8fafc;
-  
+
   --color-muted: #1e293b;
   --color-muted-foreground: #94a3b8;
-  
+
   --color-accent: #1d4ed8;
   --color-accent-foreground: #ffffff;
-  
+
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-destructive: #ef4444;
-  
+
   --radius-lg: 0.75rem;
   --radius-md: 0.5rem;
   --radius-sm: 0.25rem;
