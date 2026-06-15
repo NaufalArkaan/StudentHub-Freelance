@@ -16,6 +16,37 @@ export function Navbar({ userProfile }: NavbarProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const [avatar, setAvatar] = React.useState("https://api.dicebear.com/7.x/avataaars/svg?seed=StudentHub");
+
+  React.useEffect(() => {
+    const loadProfile = () => {
+      const saved = localStorage.getItem("profile");
+
+      if (!saved) return;
+
+      const profile = JSON.parse(saved);
+
+      const avatarUrl = profile.nim
+        ? `https://krs.umm.ac.id/Poto/${profile.nim.slice(
+          0,
+          4
+        )}/${profile.nim}.JPG`
+        : "https://api.dicebear.com/7.x/avataaars/svg?seed=StudentHub";
+
+      setAvatar(avatarUrl);
+    };
+
+    loadProfile();
+
+    window.addEventListener("profileUpdated", loadProfile);
+
+    return () => {
+      window.removeEventListener(
+        "profileUpdated",
+        loadProfile
+      );
+    };
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -64,6 +95,38 @@ export function Navbar({ userProfile }: NavbarProps) {
           <div className="hidden md:flex items-center gap-4">
             {userProfile ? (
               <div className="flex items-center gap-3">
+
+                <Link href="/client/profile">
+                  <img src={
+                    avatar ||
+                    "https://api.dicebear.com/7.x/avataaars/svg?seed=StudentHub"
+                  }
+                    alt="Profile"
+                    className="
+                      h-10
+                      w-10
+                      rounded-full
+                      object-cover
+                      border-2
+                      border-blue-500
+                      cursor-pointer
+                      hover:scale-105
+                      transition
+                    "
+                  />
+                </Link>
+                <Link
+                  href="/client/profile"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Profile
+                  </Button>
+                </Link>
                 <Link href={getDashboardLink()}>
                   <Button variant="secondary" size="sm" className="flex items-center gap-2">
                     <LayoutDashboard className="h-4 w-4" />

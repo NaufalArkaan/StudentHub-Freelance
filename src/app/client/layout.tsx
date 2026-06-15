@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Sun, Moon, LogOut, GraduationCap } from 'lucide-react';
+import { Sun, Moon, LogOut, GraduationCap, User } from 'lucide-react';
 
 export default function ClientLayout({
   children,
@@ -53,12 +53,17 @@ export default function ClientLayout({
         if (user) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('avatar_url')
+            .select('nim')
             .eq('id', user.id)
             .single();
 
-          if (profile?.avatar_url) {
-            setAvatarUrl(profile.avatar_url);
+          if (profile?.nim) {
+            setAvatarUrl(
+              `https://krs.umm.ac.id/Poto/${profile.nim.slice(
+                0,
+                4
+              )}/${profile.nim}.JPG`
+            );
           }
         }
       } catch (error) {
@@ -197,7 +202,8 @@ export default function ClientLayout({
             </button>
 
             {/* AVATAR */}
-            <div
+            <Link
+              href="/client/profile"
               className={`
                 w-10 h-10
                 rounded-full
@@ -207,6 +213,7 @@ export default function ClientLayout({
                 transition-all duration-300
                 hover:scale-105
                 hover:ring-2 hover:ring-cyan-400/50
+                block
                 ${isDark
                   ? 'border-slate-700 bg-slate-800'
                   : 'border-slate-300 bg-slate-200'
@@ -221,13 +228,16 @@ export default function ClientLayout({
                 />
               ) : (
                 <div
-                  className={`w-full h-full flex items-center justify-center text-xs font-bold ${isDark ? 'text-slate-300' : 'text-slate-600'
-                    }`}
+                  className={`
+                    w-full h-full
+                    flex items-center justify-center
+                    ${isDark ? 'text-slate-300' : 'text-slate-600'}
+                  `}
                 >
-                  U
+                  <User className="h-5 w-5" />
                 </div>
               )}
-            </div>
+            </Link>
 
             {/* LOGOUT */}
             <button

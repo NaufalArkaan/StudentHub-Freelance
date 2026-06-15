@@ -1,296 +1,233 @@
 'use client';
 
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronDown, Heart, Star, Terminal, Layout, Cpu, Smartphone, Server, FileText } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+import { Search, Compass } from 'lucide-react';
 
-export default function ClientExplore() {
+type Category = {
+  id: number;
+  title: string;
+  slug: string;
+  badge: string;
+  description: string;
+  image: string;
+  serviceCount: number;
+};
+
+// Menggunakan gambar asli dari Unsplash agar langsung muncul
+const categories: Category[] = [
+  {
+    id: 1,
+    title: 'Premium UI/UX Prototyping',
+    slug: 'ui-ux',
+    badge: 'FEATURED',
+    description: 'Bring your app ideas to life with modern mockups.',
+    image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=800&auto=format&fit=crop',
+    serviceCount: 8,
+  },
+  {
+    id: 2,
+    title: 'Programming & Tech',
+    slug: 'programming-tech',
+    badge: 'TOP RATED',
+    description: 'Coding assistance, web development, AI, and software engineering.',
+    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop',
+    serviceCount: 12,
+  },
+  {
+    id: 3,
+    title: 'Cybersecurity & CTF Prep',
+    slug: 'cybersecurity',
+    badge: 'NEW',
+    description: 'Learn ethical hacking, penetration testing, and web security.',
+    image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800&auto=format&fit=crop',
+    serviceCount: 6,
+  },
+  {
+    id: 4,
+    title: 'Network Simulation',
+    slug: 'network-simulation',
+    badge: 'PRO',
+    description: 'Cisco Packet Tracer, MikroTik, routing, switching, and servers.',
+    image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=800&auto=format&fit=crop',
+    serviceCount: 4,
+  },
+  {
+    id: 5,
+    title: 'Video Editing',
+    slug: 'video-editing',
+    badge: 'HOT',
+    description: 'Professional editing, motion graphics, and cinematic videos.',
+    image: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?q=80&w=800&auto=format&fit=crop',
+    serviceCount: 7,
+  },
+  {
+    id: 6,
+    title: 'Content Writing',
+    slug: 'content-writing',
+    badge: 'CREATIVE',
+    description: 'Academic writing, blogs, copywriting, and creative content.',
+    image: 'https://images.unsplash.com/photo-1455390582262-044cdead27d8?q=80&w=800&auto=format&fit=crop',
+    serviceCount: 5,
+  },
+];
+
+export default function ExplorePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // 1. STATES
-  const [favorites, setFavorites] = React.useState<Record<number, boolean>>({});
-  const [currentPage, setCurrentPage] = React.useState(1);
+  // Mengambil parameter search dari URL (jika dialihkan dari Dashboard)
+  const [search, setSearch] = useState('');
 
-  const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
-  const toggleDropdown = (menu: string) => setOpenDropdown(prev => prev === menu ? null : menu);
+  useEffect(() => {
+    const query = searchParams?.get('search');
+    if (query) {
+      setSearch(query);
+    }
+  }, [searchParams]);
 
-  const [activeTech, setActiveTech] = React.useState('All');
-  const [activeDelivery, setActiveDelivery] = React.useState('Any Time');
-  const [activeBudget, setActiveBudget] = React.useState('Any Budget');
-  const [activeSort, setActiveSort] = React.useState('Recommended');
+  const filteredCategories = useMemo(() => {
+    const keyword = search.toLowerCase();
 
-  const deliveryOptions = ['Any Time', '24 Hours', 'Up to 3 Days', 'Up to 7 Days'];
-  const budgetOptions = ['Any Budget', 'Under Rp 50k', 'Rp 50k - Rp 150k', 'Over Rp 150k'];
-  const sortOptions = ['Recommended', 'Highest Rated', 'Lowest Price'];
+    return categories.filter(
+      (category) =>
+        category.title.toLowerCase().includes(keyword) ||
+        category.description.toLowerCase().includes(keyword)
+    );
+  }, [search]);
 
-  const toggleFavorite = (id: number) => {
-    setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  // 2. DUMMY DATA
-  const services = [
-    {
-      id: 1,
-      title: 'Jasa Debugging Java & Swing GUI',
-      freelancerName: 'Robi A.',
-      freelancerAvatar: 'R',
-      rating: 4.9,
-      price: 'Rp 100.000',
-      priceNum: 100000,
-      icon: Terminal,
-      bgGradient: 'from-amber-500/20 to-orange-600/10',
-      tag: 'Java',
-    },
-    {
-      id: 2,
-      title: 'Slicing UI React & Tailwind CSS',
-      freelancerName: 'Fina A.',
-      freelancerAvatar: 'F',
-      rating: 5.0,
-      price: 'Rp 150.000',
-      priceNum: 150000,
-      icon: Layout,
-      bgGradient: 'from-cyan-500/20 to-blue-600/10',
-      tag: 'React',
-    },
-    {
-      id: 3,
-      title: 'Pembuatan Model Machine Learning',
-      freelancerName: 'Alex M.',
-      freelancerAvatar: 'A',
-      rating: 4.8,
-      price: 'Rp 200.000',
-      priceNum: 200000,
-      icon: Cpu,
-      bgGradient: 'from-purple-500/20 to-indigo-600/10',
-      tag: 'AI/ML',
-    },
-    {
-      id: 4,
-      title: 'Cross-Platform Flutter Development',
-      freelancerName: 'Kevin J.',
-      freelancerAvatar: 'K',
-      rating: 4.9,
-      price: 'Rp 120.000',
-      priceNum: 120000,
-      icon: Smartphone,
-      bgGradient: 'from-pink-500/20 to-rose-600/10',
-      tag: 'Mobile',
-    },
-    {
-      id: 5,
-      title: 'API Development with Node.js',
-      freelancerName: 'Dika S.',
-      freelancerAvatar: 'D',
-      rating: 4.7,
-      price: 'Rp 90.000',
-      priceNum: 90000,
-      icon: Server,
-      bgGradient: 'from-emerald-500/20 to-teal-600/10',
-      tag: 'Backend',
-    },
-    {
-      id: 6,
-      title: 'Python Scripting & Automation Tools',
-      freelancerName: 'Sarah L.',
-      freelancerAvatar: 'S',
-      rating: 5.0,
-      price: 'Rp 80.000',
-      priceNum: 80000,
-      icon: FileText,
-      bgGradient: 'from-blue-500/20 to-cyan-600/10',
-      tag: 'Python',
-    },
-  ];
-
-  // 3. LOGIKA FILTER & SORTING
-  const techStacks = ['All', ...Array.from(new Set(services.map((s) => s.tag)))];
-
-  let processedServices = services.filter((service) => {
-    if (activeTech !== 'All' && service.tag !== activeTech) return false;
-    return true;
-  });
-
-  // Logika Sorting yang benar-benar berfungsi
-  if (activeSort === 'Highest Rated') {
-    processedServices.sort((a, b) => b.rating - a.rating);
-  } else if (activeSort === 'Lowest Price') {
-    processedServices.sort((a, b) => a.priceNum - b.priceNum);
-  }
-
-  // 4. KOMPONEN UI
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 min-h-screen">
+    <div className="bg-slate-50 dark:bg-[#090d16] min-h-screen pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
 
-      {/* Header Section */}
-      <div className="space-y-4">
-        <button
-          onClick={() => router.push('/client/dashboard')}
-          className="inline-flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
-        >
-          <ChevronLeft className="h-4 w-4" /> Back
-        </button>
-
-        <div className="space-y-2">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white transition-colors">
-            Programming & Tech Services
+        {/* HERO SECTION */}
+        <section className="text-center mb-16 space-y-6">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight text-slate-900 dark:text-white transition-colors">
+            Explore All Categories
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-            Connect with skilled student developers for everything from quick bug fixes to full-stack applications and AI models.
+
+          <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto transition-colors">
+            Browse hundreds of services offered by verified students.
           </p>
-        </div>
-      </div>
 
-      {/* Filter Toolbar Terpadu */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111827] shadow-sm relative z-20">
+          <div className="max-w-2xl mx-auto mt-10 relative group">
+            <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+            </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-
-          {/* Tech Stack Dropdown */}
-          <div className="relative">
-            <button onClick={() => toggleDropdown('tech')} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:bg-[#1f2937] dark:hover:bg-slate-800 text-xs font-bold text-slate-900 dark:text-slate-200 transition-colors">
-              Tech Stack: <span className="text-cyan-600 dark:text-cyan-400">{activeTech}</span>
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${openDropdown === 'tech' ? 'rotate-180' : ''}`} />
-            </button>
-            {openDropdown === 'tech' && (
-              <div className="absolute top-full left-0 mt-2 w-40 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#111827] shadow-lg py-2 z-30">
-                {techStacks.map((tech) => (
-                  <button key={tech} onClick={() => { setActiveTech(tech); setOpenDropdown(null); }} className={`w-full text-left px-4 py-2 text-xs font-bold transition-colors ${activeTech === tech ? 'text-cyan-600 bg-cyan-50 dark:text-cyan-400 dark:bg-cyan-900/20' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}>
-                    {tech}
-                  </button>
-                ))}
-              </div>
-            )}
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="What service are you looking for?"
+              className="
+                w-full pl-14 pr-6 py-4 sm:py-5 rounded-full 
+                border border-slate-200 dark:border-slate-800 
+                bg-white/80 dark:bg-slate-900/50 backdrop-blur-md
+                text-slate-900 dark:text-white 
+                placeholder:text-slate-400 dark:placeholder:text-slate-500
+                focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 
+                shadow-sm hover:shadow-md dark:shadow-none
+                transition-all duration-300 text-base
+              "
+            />
           </div>
+        </section>
 
-          {/* Delivery Time Dropdown */}
-          <div className="relative">
-            <button onClick={() => toggleDropdown('delivery')} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:bg-[#1f2937] dark:hover:bg-slate-800 text-xs font-bold text-slate-900 dark:text-slate-200 transition-colors">
-              Delivery: <span className="font-normal">{activeDelivery}</span>
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${openDropdown === 'delivery' ? 'rotate-180' : ''}`} />
-            </button>
-            {openDropdown === 'delivery' && (
-              <div className="absolute top-full left-0 mt-2 w-40 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#111827] shadow-lg py-2 z-30">
-                {deliveryOptions.map((opt) => (
-                  <button key={opt} onClick={() => { setActiveDelivery(opt); setOpenDropdown(null); }} className={`w-full text-left px-4 py-2 text-xs font-bold transition-colors ${activeDelivery === opt ? 'text-cyan-600 bg-cyan-50 dark:text-cyan-400 dark:bg-cyan-900/20' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}>
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            )}
+        {/* EMPTY STATE */}
+        {filteredCategories.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-3xl bg-white dark:bg-transparent">
+            <Compass className="h-12 w-12 text-slate-300 dark:text-slate-600 mb-4 animate-pulse" />
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white transition-colors">
+              No Categories Found
+            </h3>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 transition-colors">
+              Try adjusting your search keyword.
+            </p>
           </div>
+        )}
 
-          {/* Budget Dropdown */}
-          <div className="relative">
-            <button onClick={() => toggleDropdown('budget')} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:bg-[#1f2937] dark:hover:bg-slate-800 text-xs font-bold text-slate-900 dark:text-slate-200 transition-colors">
-              Budget: <span className="font-normal">{activeBudget}</span>
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${openDropdown === 'budget' ? 'rotate-180' : ''}`} />
-            </button>
-            {openDropdown === 'budget' && (
-              <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#111827] shadow-lg py-2 z-30">
-                {budgetOptions.map((opt) => (
-                  <button key={opt} onClick={() => { setActiveBudget(opt); setOpenDropdown(null); }} className={`w-full text-left px-4 py-2 text-xs font-bold transition-colors ${activeBudget === opt ? 'text-cyan-600 bg-cyan-50 dark:text-cyan-400 dark:bg-cyan-900/20' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}>
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        {/* GRID SECTION */}
+        {filteredCategories.length > 0 && (
+          <section>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
+              {filteredCategories.map((category) => (
+                <div
+                  key={category.id}
+                  onClick={() => router.push(`/client/explore/${category.slug}`)}
+                  className="
+                    group
+                    relative
+                    h-[340px]
+                    overflow-hidden
+                    rounded-3xl
+                    border border-slate-200 dark:border-slate-800
+                    cursor-pointer
+                    transition-all duration-500
+                    hover:-translate-y-1.5
+                    hover:border-primary/50 dark:hover:border-primary/50
+                    hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none
+                    bg-slate-200 dark:bg-slate-900
+                  "
+                >
+                  {/* Background Image using next/image */}
+                  <Image
+                    src={category.image}
+                    alt={category.title}
+                    fill
+                    className="
+                      object-cover
+                      transition-transform duration-700 ease-out
+                      group-hover:scale-110
+                    "
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
 
-        {/* Sort Section */}
-        <div className="flex items-center gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200 dark:border-slate-800 relative">
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Sort By:</span>
-          <button onClick={() => toggleDropdown('sort')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-900 dark:text-slate-200 transition-colors">
-            {activeSort} <ChevronDown className={`h-3.5 w-3.5 transition-transform ${openDropdown === 'sort' ? 'rotate-180' : ''}`} />
-          </button>
-          {openDropdown === 'sort' && (
-            <div className="absolute top-full right-0 mt-2 w-40 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#111827] shadow-lg py-2 z-30">
-              {sortOptions.map((opt) => (
-                <button key={opt} onClick={() => { setActiveSort(opt); setOpenDropdown(null); }} className={`w-full text-left px-4 py-2 text-xs font-bold transition-colors ${activeSort === opt ? 'text-cyan-600 bg-cyan-50 dark:text-cyan-400 dark:bg-cyan-900/20' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}>
-                  {opt}
-                </button>
+                  {/* Gradient Overlay for Readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
+
+                  {/* Badge */}
+                  <div className="absolute top-5 left-5">
+                    <span
+                      className="
+                        px-3 py-1.5 rounded-md text-[10px] font-extrabold tracking-widest uppercase
+                        bg-black/40 backdrop-blur-md
+                        border border-white/10
+                        text-white shadow-sm
+                      "
+                    >
+                      {category.badge}
+                    </span>
+                  </div>
+
+                  {/* Text Content Area */}
+                  <div className="absolute bottom-6 left-6 right-6 flex flex-col justify-end">
+                    <span
+                      className="
+                        inline-flex items-center w-max px-3 py-1 rounded-full text-xs font-bold
+                        bg-primary/20 backdrop-blur-sm
+                        border border-primary/30
+                        text-primary shadow-sm
+                        mb-4
+                      "
+                    >
+                      {category.serviceCount} Services Available
+                    </span>
+
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2 group-hover:text-primary transition-colors leading-tight">
+                      {category.title}
+                    </h2>
+
+                    <p className="text-slate-300 text-sm leading-relaxed line-clamp-2">
+                      {category.description}
+                    </p>
+                  </div>
+                </div>
               ))}
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Grid of Cards */}
-      {processedServices.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative z-10">
-          {processedServices.map((service) => {
-            const ServiceIcon = service.icon;
-            const isFav = !!favorites[service.id];
-
-            return (
-              <div key={service.id} className="group rounded-2xl border border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-[#111827] transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-sm hover:shadow-md dark:shadow-none">
-
-                {/* Image Area */}
-                <div className={`relative h-44 bg-gradient-to-br ${service.bgGradient} flex items-center justify-center border-b border-slate-100 dark:border-slate-800`}>
-                  <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/60 mix-blend-overlay" />
-                  <div className="p-4 rounded-xl bg-white/80 dark:bg-slate-900/60 backdrop-blur-md border border-white dark:border-slate-700/50 flex flex-col items-center gap-2 text-slate-900 dark:text-slate-200 z-10 shadow-sm">
-                    <ServiceIcon className="h-8 w-8 text-cyan-600 dark:text-cyan-400" />
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest">{service.tag}</span>
-                  </div>
-                  <button onClick={() => toggleFavorite(service.id)} className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-colors z-10 shadow-sm ${isFav ? 'bg-red-50 text-red-500 border border-red-200 dark:bg-red-500/20 dark:border-red-500/30' : 'bg-white/90 text-slate-400 hover:text-red-500 border border-slate-200 dark:bg-slate-900/80 dark:text-slate-500 dark:hover:text-white dark:border-slate-700'}`}>
-                    <Heart className={`h-4.5 w-4.5 transition-transform hover:scale-110 ${isFav ? 'fill-red-500' : ''}`} />
-                  </button>
-                </div>
-
-                {/* Card Body */}
-                <div className="p-5 space-y-4 flex-grow flex flex-col justify-between">
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-700 dark:text-slate-300 text-[10px] border border-slate-200 dark:border-slate-700">
-                          {service.freelancerAvatar}
-                        </div>
-                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{service.freelancerName}</span>
-                      </div>
-                      <div className="flex items-center gap-0.5 text-[10px] font-extrabold text-amber-500">
-                        <Star className="h-3 w-3 fill-amber-500" />
-                        <span>{service.rating}</span>
-                      </div>
-                    </div>
-                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 leading-snug">
-                      {service.title}
-                    </h3>
-                  </div>
-                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <div>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 tracking-wider uppercase font-semibold">Starting From</p>
-                      <p className="text-sm font-extrabold text-cyan-600 dark:text-cyan-400">{service.price}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        /* Empty State */
-        <div className="py-20 text-center border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-transparent">
-          <Terminal className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-500 mb-4" />
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Tidak ada layanan ditemukan</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">Coba sesuaikan pilihan filter di atas.</p>
-        </div>
-      )}
-
-      {/* Pagination */}
-      <div className="flex items-center justify-center gap-2 pt-6 pb-12">
-        <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} className="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-[#111827] dark:hover:bg-slate-800 dark:text-slate-400 dark:hover:text-white flex items-center justify-center transition-colors">
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        {[1, 2, 3].map((page) => (
-          <button key={page} onClick={() => setCurrentPage(page)} className={`w-8 h-8 rounded-lg font-bold text-xs flex items-center justify-center transition-colors shadow-sm ${currentPage === page ? 'bg-cyan-500 text-slate-900 border border-cyan-400' : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-[#111827] dark:hover:bg-slate-800 dark:text-slate-300 dark:hover:text-white'}`}>
-            {page}
-          </button>
-        ))}
-        <span className="text-slate-500 dark:text-slate-400 px-1 text-sm font-bold">...</span>
-        <button onClick={() => setCurrentPage(currentPage + 1)} className="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-[#111827] dark:hover:bg-slate-800 dark:text-slate-400 dark:hover:text-white flex items-center justify-center transition-colors">
-          <ChevronLeft className="h-4 w-4 rotate-180" />
-        </button>
+          </section>
+        )}
       </div>
     </div>
   );
