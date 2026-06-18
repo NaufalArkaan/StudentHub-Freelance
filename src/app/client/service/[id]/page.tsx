@@ -1,14 +1,16 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Star, Clock, RefreshCw, Flag, MessageSquare } from 'lucide-react';
+import { ChevronLeft, Star, Clock, RefreshCw, MessageSquare } from 'lucide-react';
 import PaymentModal from './components/PaymentModal';
 import PaymentSuccessModal from './components/PaymentSuccessModal';
+import { createClient } from '@/lib/supabase/client';
 
 // ============================================================================
-// 1. DATA TYPES (Production Strict Typing)
+// 1. DATA TYPES 
 // ============================================================================
 type Freelancer = {
     id: string;
@@ -19,26 +21,8 @@ type Freelancer = {
     reviewCount: number;
 };
 
-type Review = {
-    id: string;
-    userName: string;
-    userAvatar: string;
-    rating: number;
-    date: string;
-    comment: string;
-};
-
-type SimilarService = {
-    id: number;
-    title: string;
-    freelancerName: string;
-    rating: number;
-    price: number;
-    image: string;
-};
-
 type Service = {
-    id: number;
+    id: string;
     title: string;
     description: string;
     image: string;
@@ -47,170 +31,190 @@ type Service = {
     revisions: number;
     categorySlug: string;
     freelancer: Freelancer;
-    reviews: Review[];
-    similarServices: SimilarService[];
+    reviews: any[];
+    similarServices: any[];
 };
 
 // ============================================================================
-// 2. DATA FETCHING LAYER (Supabase Ready)
-// ============================================================================
-const fetchServiceDetail = async (id: string): Promise<Service> => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({
-                id: Number(id),
-                title: "Mentorship & Debugging Java, Data Structures, dan React App",
-                description: "Stuck on a tricky data structure assignment or trying to connect your React frontend to a Java backend? I offer comprehensive mentorship and debugging sessions tailored to computer science students and self-taught developers.\n\nMy expertise covers core Java (OOP, multithreading), complex Data Structures (Trees, Graphs, Hash Maps), and modern frontend development using React and Tailwind CSS. We don't just fix the bugs; we break down the 'why' so you can confidently tackle future challenges.",
-                image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070&auto=format&fit=crop",
-                price: 100000,
-                deliveryDays: 3,
-                revisions: 2,
-                categorySlug: "programming-tech",
-                freelancer: {
-                    id: "1",
-                    name: "Dilla",
-                    major: "Mahasiswa Informatika",
-                    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Dilla",
-                    rating: 4.9,
-                    reviewCount: 124,
-                },
-                reviews: [
-                    {
-                        id: "rev-1",
-                        userName: "Budi Santoso",
-                        userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Budi",
-                        rating: 5,
-                        date: "2 hari yang lalu",
-                        comment: "Sangat membantu! Penjelasannya tentang konsep OOP di Java sangat mudah dipahami. Bug di aplikasi React saya juga langsung ketemu solusinya.",
-                    },
-                    {
-                        id: "rev-2",
-                        userName: "Siti Aminah",
-                        userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Siti",
-                        rating: 5,
-                        date: "1 minggu yang lalu",
-                        comment: "Respons cepat dan kakaknya sabar banget ngajarin cara kerja Hash Map. Recommended banget buat yang lagi pusing tugas akhir!",
-                    }
-                ],
-                similarServices: [
-                    {
-                        id: 2,
-                        title: "Slicing UI React & Tailwind CSS",
-                        freelancerName: "Fina A.",
-                        rating: 5.0,
-                        price: 150000,
-                        image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=800&auto=format&fit=crop",
-                    },
-                    {
-                        id: 5,
-                        title: "API Development with Node.js",
-                        freelancerName: "Dika S.",
-                        rating: 4.7,
-                        price: 90000,
-                        image: "https://images.unsplash.com/photo-1555099962-4199c345e5dd?q=80&w=800&auto=format&fit=crop",
-                    }
-                ]
-            });
-        }, 500);
-    });
-};
-
-// ============================================================================
-// 3. MAIN COMPONENT
+// 2. MAIN COMPONENT
 // ============================================================================
 export default function ServiceDetailPage() {
     const router = useRouter();
     const params = useParams();
     const id = params?.id as string;
+    const supabase = createClient();
+
+    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [service, setService] = useState<Service | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isProcessingOrder, setIsProcessingOrder] = useState<boolean>(false);
 
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [service, setService] = useState<Service | null>(null);
-    const [customReviews, setCustomReviews] = useState<Review[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
     const [selectedPayment, setSelectedPayment] = useState<string>('Transfer BCA');
 
-    const paymentMethods = [
-        'Transfer BCA',
-        'Transfer BRI',
-        'Transfer Mandiri',
-        'Transfer BNI',
-        'QRIS',
-    ];
+    const paymentMethods = ['Transfer BCA', 'Transfer BRI', 'Transfer Mandiri', 'Transfer BNI', 'QRIS'];
 
+    // Ambil data User yang sedang login (sebagai Klien)
     useEffect(() => {
-        if (id) {
-            fetchServiceDetail(id)
-                .then((data) => {
-                    setService(data);
-                    setIsLoading(false);
-                })
-                .catch((err) => {
-                    console.error("Failed to fetch service", err);
-                    setIsLoading(false);
-                });
-        }
-    }, [id]);
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setCurrentUser(user);
+        };
+        getUser();
+    }, [supabase]);
 
+    // Fetch Detail Layanan & Review dari Supabase
     useEffect(() => {
-        const savedReviews = JSON.parse(
-            localStorage.getItem("reviews") || "[]"
-        );
+        const fetchServiceDetail = async () => {
+            if (!id) return;
+            setIsLoading(true);
+            try {
+                // 1. Ambil Data Layanan
+                const { data: serviceData, error: serviceError } = await supabase
+                    .from('services')
+                    .select(`
+                        *,
+                        profiles (full_name, avatar_url)
+                    `)
+                    .eq('id', id)
+                    .single();
 
-        setCustomReviews(savedReviews);
-    }, []);
+                if (serviceError) throw serviceError;
+
+                if (serviceData) {
+                    // 2. Ambil Data Review dari database (berdasarkan freelancer layanannya)
+                    const { data: reviewsData } = await supabase
+                        .from('reviews')
+                        .select('*')
+                        .eq('service_id', id)
+                        .order('created_at', { ascending: false });
+
+                    let formattedReviews: any[] = [];
+                    let avgRating = serviceData.rating || 5.0;
+                    let totalReviews = 0;
+
+                    if (reviewsData && reviewsData.length > 0) {
+                        // 3. Ambil data profil klien yang menulis review
+                        const clientIds = [...new Set(reviewsData.map(r => r.client_id))];
+                        const { data: clientProfiles } = await supabase
+                            .from('profiles')
+                            .select('id, full_name, avatar_url')
+                            .in('id', clientIds);
+
+                        const profileMap = new Map(clientProfiles?.map(p => [p.id, p]));
+
+                        // 4. Format Review & Terapkan Fitur Anonim
+                        formattedReviews = reviewsData.map((review: any) => {
+                            const clientProfile = profileMap.get(review.client_id);
+
+                            // LOGIKA FITUR ANONIM
+                            const isAnon = review.is_anonymous;
+
+                            let dateStr = "Baru saja";
+                            if (review.created_at) {
+                                dateStr = new Date(review.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                            }
+
+                            return {
+                                id: review.id,
+                                // Ganti nama jika Anonim
+                                userName: isAnon ? "Anonymous Student" : (clientProfile?.full_name || "Student"),
+                                // Ganti foto jika Anonim
+                                userAvatar: isAnon ? `https://api.dicebear.com/7.x/avataaars/svg?seed=anon${review.id}&backgroundColor=e2e8f0` : (clientProfile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${review.client_id}`),
+                                rating: review.rating || 5,
+                                comment: review.comment || "",
+                                date: dateStr
+                            };
+                        });
+
+                        // Kalkulasi ulang rating jika ada review masuk
+                        totalReviews = formattedReviews.length;
+                        const sumRating = formattedReviews.reduce((sum, r) => sum + r.rating, 0);
+                        avgRating = Number((sumRating / totalReviews).toFixed(1));
+                    }
+
+                    // 5. Masukkan ke State Service
+                    setService({
+                        id: serviceData.id,
+                        title: serviceData.title || serviceData.name || 'Untitled Service',
+                        description: serviceData.description || 'Freelancer belum menambahkan deskripsi untuk layanan ini.',
+                        image: serviceData.image_url || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070&auto=format&fit=crop",
+                        price: serviceData.price || 0,
+                        deliveryDays: serviceData.delivery_time || 3,
+                        revisions: 2,
+                        categorySlug: serviceData.tag || 'general',
+                        freelancer: {
+                            id: serviceData.freelancer_id,
+                            name: serviceData.profiles?.full_name || 'Freelancer',
+                            major: 'Mahasiswa',
+                            avatar: serviceData.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${serviceData.freelancer_id}`,
+                            rating: avgRating,
+                            reviewCount: totalReviews,
+                        },
+                        reviews: formattedReviews, // SEKARANG MENGGUNAKAN DATA ASLI
+                        similarServices: []
+                    });
+                }
+            } catch (error) {
+                console.error("Gagal mengambil detail layanan:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchServiceDetail();
+    }, [id, supabase]);
 
     const handlePayNow = () => {
+        if (!currentUser) {
+            alert("Harap login terlebih dahulu untuk memesan layanan.");
+            return;
+        }
         setShowPaymentModal(true);
     };
 
-    const handlePaymentSuccess = () => {
-        const existingOrders = JSON.parse(
-            localStorage.getItem('orders') || '[]'
-        );
+    // LOGIKA UTAMA: Menyimpan Pesanan ke Database Supabase
+    const handlePaymentSuccess = async () => {
+        if (!currentUser || !service) return;
+        setIsProcessingOrder(true);
 
-        const newOrder = {
-            id: Date.now(),
-            title: service?.title,
-            price: service?.price,
-            paymentMethod: selectedPayment,
-            status: 'Pending',
-            createdAt: new Date().toISOString(),
-        };
+        try {
+            const { error } = await supabase.from('orders').insert({
+                service_id: service.id,
+                client_id: currentUser.id,
+                price: service.price,
+                status: 'pending',
+            });
 
-        localStorage.setItem(
-            'orders',
-            JSON.stringify([...existingOrders, newOrder])
-        );
+            if (error) throw error;
 
-        setShowPaymentModal(false);
-
-        setShowSuccessModal(true);
+            setShowPaymentModal(false);
+            setShowSuccessModal(true);
+        } catch (error: any) {
+            console.error("Gagal memproses pesanan:", error);
+            alert("Error Supabase: " + (error.message || JSON.stringify(error)));
+        } finally {
+            setIsProcessingOrder(false);
+        }
     };
 
     const handleContactFreelancer = () => {
-        // Mengirimkan ID Freelancer ke Inbox agar langsung tertuju
         router.push(`/client/inbox?freelancerId=${service?.freelancer.id}`);
     };
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
+            style: 'currency', currency: 'IDR', minimumFractionDigits: 0,
         }).format(amount);
     };
 
-    const allReviews = [
-        ...(service?.reviews || []),
-        ...customReviews,
-    ];
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#090d16] text-slate-500 dark:text-slate-400">
                 <div className="animate-pulse flex flex-col items-center gap-3">
                     <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-                    <p className="text-sm font-medium">Memuat detail service...</p>
+                    <p className="text-sm font-medium">Memuat detail layanan...</p>
                 </div>
             </div>
         );
@@ -218,14 +222,14 @@ export default function ServiceDetailPage() {
 
     if (!service) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#090d16] text-red-500">
-                <p className="font-bold">Service tidak ditemukan.</p>
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#090d16] text-slate-500">
+                <p className="font-bold">Layanan tidak ditemukan.</p>
             </div>
         );
     }
 
     // ============================================================================
-    // 4. RENDER UI
+    // 3. RENDER UI
     // ============================================================================
     return (
         <div className="bg-slate-50 dark:bg-[#090d16] min-h-screen pb-20">
@@ -234,7 +238,7 @@ export default function ServiceDetailPage() {
                 {/* HEADER SECTION */}
                 <button
                     onClick={() => router.back()}
-                    className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors mb-8"
+                    className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-cyan-500 dark:text-slate-400 transition-colors mb-8"
                 >
                     <ChevronLeft className="h-4 w-4" /> Back
                 </button>
@@ -255,8 +259,8 @@ export default function ServiceDetailPage() {
                                         alt={service.freelancer.name}
                                         width={48}
                                         height={48}
-                                        unoptimized // Fix 1: Mengatasi Error SVG DiceBear
-                                        className="rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"
+                                        unoptimized
+                                        className="rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 object-cover"
                                     />
                                     <div>
                                         <h3 className="text-sm font-bold text-slate-900 dark:text-white">
@@ -271,7 +275,7 @@ export default function ServiceDetailPage() {
                                 <div className="flex items-center gap-1.5 text-sm font-medium text-slate-900 dark:text-white">
                                     <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
                                     <span className="font-bold">{service.freelancer.rating}</span>
-                                    <span className="text-slate-500 dark:text-slate-400">({service.freelancer.reviewCount} reviews)</span>
+                                    <span className="text-slate-500 dark:text-slate-400">({service.freelancer.reviewCount} ulasan)</span>
                                 </div>
                             </div>
                         </div>
@@ -291,106 +295,59 @@ export default function ServiceDetailPage() {
                         {/* ABOUT THIS SERVICE */}
                         <div className="p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827] shadow-sm">
                             <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-6">About This Service</h2>
-                            <div className="space-y-4 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-                                {/* Fix 2: Menggunakan map agar \n bisa menjadi paragraf yang rapi */}
-                                {service.description.split('\n\n').map((paragraph, index) => (
-                                    <p key={index}>{paragraph}</p>
-                                ))}
-
-                                <ul className="space-y-3 mt-6 ml-1">
-                                    <li className="flex items-start gap-3">
-                                        <span className="text-cyan-500 mt-1 text-lg leading-none">•</span>
-                                        <span>1-on-1 personalized debugging sessions via Zoom/Discord.</span>
-                                    </li>
-                                    <li className="flex items-start gap-3">
-                                        <span className="text-cyan-500 mt-1 text-lg leading-none">•</span>
-                                        <span>Code review and best practices for clean architecture.</span>
-                                    </li>
-                                    <li className="flex items-start gap-3">
-                                        <span className="text-cyan-500 mt-1 text-lg leading-none">•</span>
-                                        <span>Assistance with final year projects and technical interview prep.</span>
-                                    </li>
-                                </ul>
+                            <div className="space-y-4 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                                {service.description}
                             </div>
                         </div>
 
                         {/* REVIEWS SECTION */}
                         <div className="space-y-6 pt-4">
                             <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                                <MessageSquare className="h-5 w-5 text-cyan-500" /> {/* Fix 3: Ubah warna */}
+                                <MessageSquare className="h-5 w-5 text-cyan-500" />
                                 Client Reviews
                             </h2>
                             <div className="space-y-4">
-                                {allReviews.map((review) => (
-                                    <div key={review.id} className="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827] shadow-sm space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <Image
-                                                    src={review.userAvatar}
-                                                    alt={review.userName}
-                                                    width={40}
-                                                    height={40}
-                                                    unoptimized // Fix 1: Mengatasi Error SVG DiceBear
-                                                    className="rounded-full bg-slate-200 dark:bg-slate-800"
-                                                />
-                                                <div>
-                                                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">{review.userName}</h4>
-                                                    <div className="flex items-center gap-0.5 mt-0.5">
-                                                        {[...Array(5)].map((_, i) => (
-                                                            <Star
-                                                                key={i}
-                                                                className={`h-3 w-3 ${i < review.rating ? 'fill-amber-500 text-amber-500' : 'fill-slate-300 text-slate-300 dark:fill-slate-700 dark:text-slate-700'}`}
-                                                            />
-                                                        ))}
+                                {/* LOGIKA TAMPILAN JIKA REVIEW KOSONG ATAU ADA */}
+                                {service.reviews && service.reviews.length > 0 ? (
+                                    service.reviews.map((review) => (
+                                        <div key={review.id} className="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827] shadow-sm space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <Image
+                                                        src={review.userAvatar}
+                                                        alt={review.userName}
+                                                        width={40}
+                                                        height={40}
+                                                        unoptimized
+                                                        className="rounded-full bg-slate-200 dark:bg-slate-800 object-cover"
+                                                    />
+                                                    <div>
+                                                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">{review.userName}</h4>
+                                                        <div className="flex items-center gap-0.5 mt-0.5">
+                                                            {[...Array(5)].map((_, i) => (
+                                                                <Star
+                                                                    key={i}
+                                                                    className={`h-3 w-3 ${i < review.rating ? 'fill-amber-500 text-amber-500' : 'fill-slate-300 text-slate-300 dark:fill-slate-700'}`}
+                                                                />
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{review.date}</span>
                                             </div>
-                                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{review.date}</span>
+                                            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed italic">
+                                                &quot;{review.comment}&quot;
+                                            </p>
                                         </div>
-                                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed italic">
-                                            "{review.comment}"
+                                    ))
+                                ) : (
+                                    // TAMPILAN SAAT BELUM ADA REVIEW SAMA SEKALI
+                                    <div className="p-8 text-center rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30">
+                                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                                            Belum ada ulasan untuk layanan ini. Jadilah yang pertama untuk mencoba!
                                         </p>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* SIMILAR SERVICES SECTION */}
-                        <div className="space-y-6 pt-8 border-t border-slate-200 dark:border-slate-800">
-                            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">You might also like</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {service.similarServices.map((similar) => (
-                                    <div
-                                        key={similar.id}
-                                        onClick={() => router.push(`/client/service/${similar.id}`)}
-                                        className="group flex gap-4 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827] hover:border-cyan-500/50 cursor-pointer transition-all hover:shadow-md dark:hover:shadow-none"
-                                    >
-                                        <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-slate-200 dark:bg-slate-800">
-                                            <Image
-                                                src={similar.image}
-                                                alt={similar.title}
-                                                fill
-                                                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                        </div>
-                                        <div className="flex flex-col justify-between py-1">
-                                            <h4 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-cyan-500 transition-colors">
-                                                {similar.title}
-                                            </h4>
-                                            <div>
-                                                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
-                                                    <span>{similar.freelancerName}</span>
-                                                    <span>•</span>
-                                                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                                                    <span className="font-bold text-slate-900 dark:text-white">{similar.rating}</span>
-                                                </div>
-                                                <p className="text-sm font-black text-slate-900 dark:text-white">
-                                                    {formatCurrency(similar.price)}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                )}
                             </div>
                         </div>
 
@@ -402,13 +359,10 @@ export default function ServiceDetailPage() {
 
                             <div className="space-y-4 mb-8">
                                 <h3 className="text-xs font-bold tracking-widest text-cyan-500 uppercase">
-                                    Standard Package
+                                    Paket Layanan
                                 </h3>
                                 <p className="text-3xl font-black text-slate-900 dark:text-white">
                                     {formatCurrency(service.price)}
-                                </p>
-                                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                                    Satu sesi mentorship 60 menit dan review kode intensif.
                                 </p>
                             </div>
 
@@ -419,18 +373,18 @@ export default function ServiceDetailPage() {
                                 </div>
                                 <div className="flex items-center gap-3 text-sm font-bold text-slate-700 dark:text-slate-300">
                                     <RefreshCw className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                                    <span>{service.revisions}x Revisi / Sesi Tambahan</span>
+                                    <span>{service.revisions}x Revisi Maksimal</span>
                                 </div>
                             </div>
 
                             <div className="space-y-3 mb-8">
-                                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Select Payment</p>
+                                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Metode Pembayaran</p>
                                 {paymentMethods.map((method) => (
                                     <div
                                         key={method}
                                         onClick={() => setSelectedPayment(method)}
                                         className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedPayment === method
-                                            ? 'border-cyan-500 bg-cyan-500/5 shadow-sm' // Fix 3: Ubah warna jadi cyan
+                                            ? 'border-cyan-500 bg-cyan-500/5 shadow-sm'
                                             : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                                             }`}
                                     >
@@ -448,9 +402,10 @@ export default function ServiceDetailPage() {
                             <div className="space-y-3 mt-auto">
                                 <button
                                     onClick={handlePayNow}
-                                    className="w-full bg-cyan-500 text-white hover:bg-cyan-400 font-bold py-4 rounded-2xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                                    disabled={isProcessingOrder}
+                                    className="w-full bg-cyan-500 text-white hover:bg-cyan-400 font-bold py-4 rounded-2xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    PAY NOW
+                                    {isProcessingOrder ? 'Memproses...' : 'PAY NOW'}
                                 </button>
                                 <button
                                     onClick={handleContactFreelancer}
@@ -459,20 +414,19 @@ export default function ServiceDetailPage() {
                                     Contact Freelancer
                                 </button>
                             </div>
-                            {service && (
-                                <>
-                                    <PaymentModal
-                                        open={showPaymentModal}
-                                        paymentMethod={selectedPayment}
-                                        total={service.price}
-                                        onClose={() => setShowPaymentModal(false)}
-                                        onSuccess={handlePaymentSuccess}
-                                    />
 
-                                    <PaymentSuccessModal open={showSuccessModal}
-                                    />
-                                </>
-                            )}
+                            <PaymentModal
+                                open={showPaymentModal}
+                                paymentMethod={selectedPayment}
+                                total={service.price}
+                                onClose={() => setShowPaymentModal(false)}
+                                onSuccess={handlePaymentSuccess}
+                            />
+
+                            <PaymentSuccessModal
+                                open={showSuccessModal}
+                                freelancerId={service.freelancer.id}
+                            />
                         </div>
                     </div>
                 </div>

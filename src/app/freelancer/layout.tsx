@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Sun, Moon, LogOut, GraduationCap, User } from 'lucide-react';
 
-export default function ClientLayout({
+export default function FreelancerLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -20,6 +20,7 @@ export default function ClientLayout({
   const router = useRouter();
   const supabase = createClient();
 
+  // Load tema dari localStorage saat pertama kali mounted
   React.useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
 
@@ -28,6 +29,7 @@ export default function ClientLayout({
     }
   }, []);
 
+  // Efek scroll untuk mengecilkan ukuran navbar
   React.useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -40,10 +42,12 @@ export default function ClientLayout({
     };
   }, []);
 
+  // Sinkronisasi status tema ke localStorage
   React.useEffect(() => {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
+  // Mengambil NIM mahasiswa dari Supabase untuk menampilkan foto profil
   React.useEffect(() => {
     const fetchUserAvatar = async () => {
       try {
@@ -75,6 +79,7 @@ export default function ClientLayout({
     fetchUserAvatar();
   }, [supabase]);
 
+  // Fungsi Logout otomatis kembali ke root hometamp
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -86,18 +91,19 @@ export default function ClientLayout({
     }
   };
 
+  // Navigasi Khusus Halaman Freelancer
   const navLinks = [
-    { name: 'Home', href: '/client/dashboard' },
-    { name: 'Explore', href: '/client/explore' },
-    { name: 'Orders', href: '/client/orders' },
-    { name: 'Inbox', href: '/client/inbox' },
+    { name: 'Dashboard', href: '/freelancer/dashboard' },
+    { name: 'My Services', href: '/freelancer/services' },
+    { name: 'Orders', href: '/freelancer/orders' },
+    { name: 'Inbox', href: '/freelancer/inbox' },
   ];
 
   return (
     <div
       className={`min-h-screen flex flex-col transition-all duration-300 ${isDark
-        ? 'dark bg-[#090d16] text-slate-100'
-        : 'bg-slate-50 text-slate-900'
+          ? 'dark bg-[#090d16] text-slate-100'
+          : 'bg-slate-50 text-slate-900'
         }`}
     >
       {/* HEADER */}
@@ -125,14 +131,13 @@ export default function ClientLayout({
           }
         `}
       >
-
-        <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between transition-all duration-500 ${isScrolled ? 'h-16' : 'h-20'}
-          `}
+        <div
+          className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between transition-all duration-500 ${isScrolled ? 'h-16' : 'h-20'
+            }`}
         >
-
           {/* LOGO */}
           <Link
-            href="/client/dashboard"
+            href="/freelancer/dashboard"
             className="flex items-center gap-3 group"
           >
             <div
@@ -167,10 +172,10 @@ export default function ClientLayout({
                   key={link.name}
                   href={link.href}
                   className={`relative h-full flex items-center text-sm font-semibold transition-all duration-300 ${isActive
-                    ? 'text-cyan-400'
-                    : isDark
-                      ? 'text-slate-400 hover:text-white'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'text-cyan-400'
+                      : isDark
+                        ? 'text-slate-400 hover:text-white'
+                        : 'text-slate-600 hover:text-slate-900'
                     }`}
                 >
                   {link.name}
@@ -190,8 +195,8 @@ export default function ClientLayout({
             <button
               onClick={() => setIsDark(!isDark)}
               className={`p-2.5 rounded-xl transition-all duration-300 hover:scale-105 ${isDark
-                ? 'hover:bg-slate-800 text-slate-300'
-                : 'hover:bg-slate-100 text-slate-600'
+                  ? 'hover:bg-slate-800 text-slate-300'
+                  : 'hover:bg-slate-100 text-slate-600'
                 }`}
               title={isDark ? 'Light Mode' : 'Dark Mode'}
             >
@@ -204,7 +209,7 @@ export default function ClientLayout({
 
             {/* AVATAR */}
             <Link
-              href="/client/profile"
+              href="/freelancer/profile"
               className={`
                 w-10 h-10
                 rounded-full
@@ -265,8 +270,8 @@ export default function ClientLayout({
       {/* FOOTER */}
       <footer
         className={`border-t transition-all duration-300 ${isDark
-          ? 'bg-[#090d16] border-slate-800 text-slate-400'
-          : 'bg-white border-slate-200 text-slate-600'
+            ? 'bg-[#090d16] border-slate-800 text-slate-400'
+            : 'bg-white border-slate-200 text-slate-600'
           }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -287,15 +292,12 @@ export default function ClientLayout({
             <Link href="#" className="hover:text-cyan-400 transition-colors">
               Terms
             </Link>
-
             <Link href="#" className="hover:text-cyan-400 transition-colors">
               Privacy
             </Link>
-
             <Link href="#" className="hover:text-cyan-400 transition-colors">
               Contact
             </Link>
-
             <Link href="#" className="hover:text-cyan-400 transition-colors">
               Help Center
             </Link>

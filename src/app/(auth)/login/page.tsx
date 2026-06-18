@@ -87,7 +87,7 @@ export default function LoginPage() {
         } else {
           // If the role is freelancer (mahasiswa), validate the NIM against the database profile
           if (dbUser.role === 'freelancer') {
-            const profileNim = (dbUser.profiles as any)?.nim;
+            const profileNim = (dbUser.profiles as { nim?: string })?.nim;
             if (!values.nim || values.nim.trim() !== profileNim) {
               await supabase.auth.signOut();
               throw new Error('NIM wajib diisi dan harus sesuai dengan akun Freelancer Anda.');
@@ -96,13 +96,14 @@ export default function LoginPage() {
           redirectBasedOnRole(dbUser.role);
         }
       }
-    } catch (err: any) {
-      console.error('Login error:', err);
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error('Login error:', error);
       // Custom friendly error messages
-      if (err.message === 'Invalid login credentials') {
+      if (error.message === 'Invalid login credentials') {
         setErrorMsg('Email atau Password yang Anda masukkan salah.');
       } else {
-        setErrorMsg(err.message || 'Terjadi kesalahan sistem saat mencoba masuk.');
+        setErrorMsg(error.message || 'Terjadi kesalahan sistem saat mencoba masuk.');
       }
     } finally {
       setIsLoading(false);

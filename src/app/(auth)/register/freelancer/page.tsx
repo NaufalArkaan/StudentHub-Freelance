@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/purity */
 'use client';
 
 import * as React from 'react';
@@ -205,9 +206,10 @@ export default function RegisterFreelancerPage() {
           router.push('/login');
         }, 5000);
       }
-    } catch (err: any) {
-      console.error('Freelancer registration error:', err);
-      setErrorMsg(err.message || 'Terjadi kesalahan saat melakukan registrasi.');
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error('Freelancer registration error:', error);
+      setErrorMsg(error.message || 'Terjadi kesalahan saat melakukan registrasi.');
     } finally {
       setIsLoading(false);
     }

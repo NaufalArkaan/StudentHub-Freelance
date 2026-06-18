@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PublicLayout({
   children,
 }: {
@@ -43,12 +45,12 @@ export default async function PublicLayout({
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-[#030712] text-slate-50 font-sans selection:bg-cyan-500/30 selection:text-white">
       <Navbar userProfile={userProfile} />
-      <main className="flex-grow">
+      <main className="flex-grow w-full flex flex-col">
         {children}
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

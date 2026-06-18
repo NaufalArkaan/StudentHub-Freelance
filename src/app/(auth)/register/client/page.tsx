@@ -81,9 +81,10 @@ export default function RegisterClientPage() {
           router.push('/login');
         }, 5000);
       }
-    } catch (err: any) {
-      console.error('Client registration error:', err);
-      setErrorMsg(err.message || 'Terjadi kesalahan saat melakukan registrasi.');
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error('Registration error:', error);
+      setErrorMsg(error.message || 'Terjadi kesalahan saat melakukan registrasi.');
     } finally {
       setIsLoading(false);
     }

@@ -1,7 +1,8 @@
+'use client';
+
 import Image from "next/image";
 import { Order } from "../types";
 import { StatusBadge } from "./status-badge";
-import { ActionButton } from "./action-button";
 
 interface OrdersTableProps {
   orders: Order[];
@@ -69,12 +70,12 @@ export function OrdersTable({
               <tr
                 key={order.id}
                 className="
-  hover:bg-cyan-50
-  dark:hover:bg-cyan-500/5
-  transition-all
-  duration-200
-  group
-"
+                  hover:bg-cyan-50
+                  dark:hover:bg-cyan-500/5
+                  transition-all
+                  duration-200
+                  group
+                "
               >
                 <td className="px-6 py-5">
                   <div className="flex items-center gap-4">
@@ -141,14 +142,35 @@ export function OrdersTable({
                   <StatusBadge status={order.status} />
                 </td>
 
-                <td className="px-6 py-5 text-right">
-                  <div className="flex justify-end">
-                    <ActionButton
-                      status={order.status}
-                      reviewed={order.reviewed}
-                      onClickChat={() => onChatClick(order.id)}
-                      onClickReview={() => onReviewClick(order.id)}
-                    />
+                {/* DESKTOP ACTION BUTTONS */}
+                <td className="px-6 py-5 text-right whitespace-nowrap">
+                  <div className="flex items-center justify-end gap-3">
+                    {order.actionType === 'solid' && (
+                      <button
+                        onClick={() => onReviewClick(order.id)}
+                        className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs transition-colors w-32 text-center shadow-sm"
+                      >
+                        {order.actionLabel}
+                      </button>
+                    )}
+
+                    {order.actionType === 'outline' && (
+                      <button
+                        onClick={() => onChatClick(order.id)}
+                        className="px-5 py-2.5 rounded-xl border-2 border-cyan-500 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 font-bold text-xs transition-colors w-32 text-center"
+                      >
+                        {order.actionLabel}
+                      </button>
+                    )}
+
+                    {order.actionType === 'disabled' && (
+                      <button
+                        disabled
+                        className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-bold text-xs w-32 text-center cursor-not-allowed border border-slate-200 dark:border-slate-700"
+                      >
+                        {order.actionLabel}
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -157,7 +179,7 @@ export function OrdersTable({
         </table>
       </div>
 
-      {/* Mobile */}
+      {/* Mobile View */}
       <div className="block md:hidden divide-y divide-slate-200 dark:divide-cyan-500/10">
         {orders.map((order) => (
           <div key={order.id} className="p-5 space-y-4">
@@ -215,17 +237,37 @@ export function OrdersTable({
               </span>
             </div>
 
-            {(order.status === "in_progress" ||
-              order.status === "completed") && (
-                <div className="pt-3">
-                  <ActionButton
-                    status={order.status}
-                    reviewed={order.reviewed}
-                    onClickChat={() => onChatClick(order.id)}
-                    onClickReview={() => onReviewClick(order.id)}
-                  />
-                </div>
-              )}
+            {/* MOBILE ACTION BUTTONS */}
+            {order.actionType && (
+              <div className="pt-3">
+                {order.actionType === 'solid' && (
+                  <button
+                    onClick={() => onReviewClick(order.id)}
+                    className="w-full px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs transition-colors text-center shadow-sm"
+                  >
+                    {order.actionLabel}
+                  </button>
+                )}
+
+                {order.actionType === 'outline' && (
+                  <button
+                    onClick={() => onChatClick(order.id)}
+                    className="w-full px-5 py-2.5 rounded-xl border-2 border-cyan-500 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 font-bold text-xs transition-colors text-center"
+                  >
+                    {order.actionLabel}
+                  </button>
+                )}
+
+                {order.actionType === 'disabled' && (
+                  <button
+                    disabled
+                    className="w-full px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-bold text-xs text-center cursor-not-allowed border border-slate-200 dark:border-slate-700"
+                  >
+                    {order.actionLabel}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -22,4 +22,7 @@ export interface Order {
   createdAt: string;
 
   reviewed: boolean;
+
+  actionType?: 'solid' | 'outline' | 'disabled';
+  actionLabel?: string;
 }

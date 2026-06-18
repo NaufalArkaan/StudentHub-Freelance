@@ -4,10 +4,12 @@ import { useRouter } from 'next/navigation';
 
 type PaymentSuccessModalProps = {
     open: boolean;
+    freelancerId?: string;
 };
 
 export default function PaymentSuccessModal({
     open,
+    freelancerId
 }: PaymentSuccessModalProps) {
     const router = useRouter();
 
@@ -58,19 +60,26 @@ export default function PaymentSuccessModal({
 
                 <p className="text-slate-500 text-lg leading-relaxed mb-8">
                     Your order has been sent to the freelancer.
-                    They will contact you shortly to begin the session.
+                    You can now chat with them to begin the session.
                 </p>
 
+                {/* TOMBOL INI SEKARANG MENGARAH KE INBOX */}
                 <button
-                    onClick={() => router.push('/client/orders')}
-                    className="w-full bg-cyan-500 hover:bg-cyan-400 text-white font-bold py-4 rounded-xl mb-4 transition-all duration-300"
+                    onClick={() => {
+                        if (freelancerId) {
+                            router.push(`/client/inbox?freelancerId=${freelancerId}`);
+                        } else {
+                            router.push('/client/inbox');
+                        }
+                    }}
+                    className="w-full bg-cyan-500 hover:bg-cyan-400 text-white font-bold py-4 rounded-xl mb-4 transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
                 >
-                    VIEW ORDER
+                    CHAT FREELANCER SEKARANG
                 </button>
 
                 <button
                     onClick={() => router.push('/client/dashboard')}
-                    className="text-slate-500 hover:text-slate-800 text-sm font-medium transition"
+                    className="text-slate-500 hover:text-slate-800 text-sm font-bold transition-colors"
                 >
                     RETURN TO DASHBOARD
                 </button>

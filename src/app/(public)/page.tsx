@@ -1,8 +1,7 @@
+'use client';
+
 import * as React from 'react';
 import Link from 'next/link';
-import Button from '@/components/ui/Button';
-import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 import {
   ArrowRight,
   ShieldCheck,
@@ -15,10 +14,9 @@ import {
   Palette,
   Languages,
   BarChart3,
-  Users,
-  GraduationCap
+  GraduationCap,
+  Star
 } from 'lucide-react';
-import { formatPrice } from '@/lib/utils/utils';
 
 export default function LandingPage() {
   const featuredServices = [
@@ -60,191 +58,225 @@ export default function LandingPage() {
     {
       name: 'Programming & IT',
       count: '15+ Jasa',
-      icon: <Code2 className="h-6 w-6 text-blue-500" />,
+      icon: <Code2 className="h-7 w-7 text-cyan-400" />,
     },
     {
       name: 'Desain Grafis',
       count: '30+ Jasa',
-      icon: <Palette className="h-6 w-6 text-purple-500" />,
+      icon: <Palette className="h-7 w-7 text-purple-400" />,
     },
     {
       name: 'Terjemahan',
       count: '10+ Jasa',
-      icon: <Languages className="h-6 w-6 text-emerald-500" />,
+      icon: <Languages className="h-7 w-7 text-emerald-400" />,
     },
     {
       name: 'Analisis Data',
       count: '8+ Jasa',
-      icon: <BarChart3 className="h-6 w-6 text-amber-500" />,
+      icon: <BarChart3 className="h-7 w-7 text-amber-400" />,
     },
   ];
 
-  return (
-    <div className="relative overflow-hidden" id="home">
-      {/* Background Glows */}
-      <div className="absolute top-[-10%] left-[5%] w-[80%] h-[60%] blue-glow pointer-events-none z-0" />
-      <div className="absolute top-[40%] right-[-10%] w-[60%] h-[50%] blue-glow pointer-events-none z-0 opacity-50" />
+  // Helper format harga lokal di dalam file agar mandiri
+  const formatIDR = (price: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price);
+  };
 
-      {/* Hero Section */}
+  return (
+    // Memaksa tema gelap dengan bg-[#030712] (sangat gelap/hitam)
+    <div className="relative overflow-hidden bg-[#030712] text-slate-50 font-sans min-h-screen selection:bg-cyan-500/30" id="home">
+
+      {/* --- BACKGROUND EFFECTS --- */}
+      {/* Grid Pattern Overlay */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay z-0"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none z-0"></div>
+
+      {/* Glowing Orbs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute top-[20%] right-[-10%] w-[40%] h-[50%] bg-purple-600/20 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-[-10%] left-[20%] w-[60%] h-[40%] bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none z-0" />
+
+      {/* --- HERO SECTION --- */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 sm:pt-40 sm:pb-28 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-semibold text-blue-400 mb-6 animate-pulse">
-          <GraduationCap className="h-4 w-4" />
-          Marketplace Jasa Akademik Terbesar
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-cyan-400 mb-8 backdrop-blur-md shadow-lg shadow-cyan-500/10 hover:border-cyan-500/50 transition-colors cursor-default">
+          <GraduationCap className="h-4 w-4 animate-pulse" />
+          Marketplace Jasa Akademik Terbesar di Kampus
         </div>
-        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight mb-6">
-          <span className="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight mb-6 leading-[1.15]">
+          <span className="bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
             Solusi Jasa Mahasiswa,
           </span>
           <br />
-          <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
             Oleh Mahasiswa
           </span>
         </h1>
-        <p className="max-w-2xl mx-auto text-base sm:text-lg text-slate-400 mb-10 leading-relaxed">
-          Platform penyedia freelance profesional dari mahasiswa untuk kebutuhan bisnis, riset, dan akademik. Berkualitas tinggi, berlisensi NIM, dan ramah kantong.
+
+        <p className="max-w-2xl mx-auto text-base sm:text-lg text-slate-400 mb-10 leading-relaxed font-medium">
+          Platform penyedia freelance profesional dari mahasiswa untuk kebutuhan bisnis, riset, dan akademik. Berkualitas tinggi, terverifikasi KTM, dan ramah kantong.
         </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href="/#explore">
-            <Button variant="gradient" size="lg" className="w-full sm:w-auto flex items-center justify-center gap-2">
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+          <Link href="#explore" className="w-full sm:w-auto">
+            <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-sm hover:scale-105 hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all duration-300 group">
               Jelajahi Sekarang
-              <ArrowRight className="h-5 w-5" />
-            </Button>
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </button>
           </Link>
-          <Link href="/register">
-            <Button variant="outline" size="lg" className="w-full sm:w-auto">
+          <Link href="/register" className="w-full sm:w-auto">
+            <button className="w-full sm:w-auto flex items-center justify-center px-8 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 backdrop-blur-md transition-all duration-300">
               Gabung Menjadi Freelancer
-            </Button>
+            </button>
           </Link>
         </div>
       </section>
 
-      {/* Layanan Unggulan (Featured Services) */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-slate-900" id="explore">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12">
+      {/* --- FEATURED SERVICES --- */}
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24" id="explore">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
           <div>
-            <Badge variant="primary" className="mb-3">Layanan Populer</Badge>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Layanan Unggulan</h2>
-            <p className="text-sm text-slate-400 mt-2 max-w-md">Jasa terbaik pilihan klien yang dikerjakan langsung oleh mahasiswa ahli.</p>
+            <span className="inline-block px-3 py-1 mb-4 rounded-md bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] font-black uppercase tracking-widest">
+              Layanan Populer
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-white">Layanan Unggulan</h2>
+            <p className="text-sm text-slate-400 mt-3 max-w-md font-medium leading-relaxed">
+              Jasa terbaik pilihan klien yang dikerjakan langsung oleh mahasiswa ahli di bidangnya.
+            </p>
           </div>
-          <Link href="/#explore" className="text-sm font-semibold text-blue-500 hover:text-blue-400 flex items-center gap-1 mt-4 md:mt-0">
+          <Link href="#explore" className="text-sm font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors group">
             Lihat Semua Jasa
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {featuredServices.map((service, index) => (
-            <Card key={index} hoverEffect className="flex flex-col overflow-hidden h-full">
-              <div className="relative h-44 w-full bg-slate-950 overflow-hidden">
-                {/* Fallback pattern for images */}
-                <div className="absolute inset-0 bg-slate-900 flex items-center justify-center">
-                  <div className="absolute inset-0 opacity-10 bg-grid-pattern" />
-                  <span className="text-xs text-slate-500 uppercase tracking-widest">{service.category}</span>
-                </div>
+            <div key={index} className="flex flex-col bg-[#0B1121]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:-translate-y-2 hover:border-cyan-500/50 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)] transition-all duration-500 group cursor-pointer">
+              <div className="relative h-44 w-full bg-slate-900 overflow-hidden">
+                <div className="absolute inset-0 opacity-20 bg-grid-pattern z-0" />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={service.image}
                   alt={service.title}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 hover:opacity-100"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100 z-10"
                 />
-              </div>
-              <CardHeader className="p-5 flex-grow space-y-2">
-                <Badge variant="outline" className="w-fit text-[10px] uppercase font-bold tracking-wider">{service.category}</Badge>
-                <CardTitle className="text-sm font-bold leading-snug line-clamp-2 text-slate-100 hover:text-blue-400 transition-colors">
-                  {service.title}
-                </CardTitle>
-                <div className="pt-2">
-                  <p className="text-xs text-slate-400 font-semibold">{service.freelancer}</p>
-                  <p className="text-[10px] text-slate-500">{service.university}</p>
+                <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg flex items-center gap-1 border border-white/10 z-20">
+                  <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                  <span className="text-[10px] font-bold text-white">5.0</span>
                 </div>
-              </CardHeader>
-              <CardContent className="px-5 pb-5 pt-0 mt-auto border-t border-slate-900/50 flex justify-between items-center">
-                <span className="text-xs text-slate-500">Mulai dari</span>
-                <span className="text-sm font-bold text-blue-400">{formatPrice(service.price)}</span>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="p-5 flex flex-col flex-grow">
+                <span className="w-fit text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-cyan-400 mb-3">
+                  {service.category}
+                </span>
+                <h3 className="text-sm font-bold leading-relaxed text-white group-hover:text-cyan-400 transition-colors line-clamp-2 mb-4">
+                  {service.title}
+                </h3>
+                <div className="mt-auto pt-4 border-t border-white/5">
+                  <p className="text-xs text-slate-300 font-bold">{service.freelancer}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">{service.university}</p>
+                </div>
+                <div className="mt-4 flex justify-between items-center bg-black/30 -mx-5 -mb-5 px-5 py-4 border-t border-white/5">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mulai dari</span>
+                  <span className="text-sm font-black text-cyan-400">{formatIDR(service.price)}</span>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* Why Choose StudentHub */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-slate-900" id="about">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Visual Showcase (Mockup mockup) */}
-          <div className="relative rounded-xl border border-slate-800 bg-[#0c1322] p-4 sm:p-6 shadow-2xl overflow-hidden group">
-            <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-blue-500/10 rounded-full filter blur-3xl pointer-events-none" />
-            <div className="aspect-video w-full rounded-lg bg-slate-950 flex flex-col justify-between border border-slate-900 p-6 overflow-hidden">
-              <div className="flex items-center justify-between border-b border-slate-900 pb-3">
+      {/* --- WHY CHOOSE US (MOCKUP) --- */}
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-white/5" id="about">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+          {/* Visual Showcase (Sleek Dark Mockup) */}
+          <div className="relative rounded-3xl border border-white/10 bg-[#0B1121]/50 p-6 shadow-2xl overflow-hidden group backdrop-blur-sm">
+            <div className="absolute top-0 right-0 w-[70%] h-[70%] bg-blue-500/10 rounded-full filter blur-[80px] pointer-events-none" />
+
+            {/* Fake Browser/IDE Window */}
+            <div className="aspect-video w-full rounded-xl bg-[#050810] flex flex-col justify-between border border-white/10 overflow-hidden shadow-2xl relative z-10">
+              <div className="flex items-center justify-between border-b border-white/5 px-4 py-3 bg-white/[0.02]">
                 <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500/70" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/70" />
+                  <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
                 </div>
-                <div className="px-3 py-1 rounded bg-slate-900 text-[10px] text-slate-500">studenthub.id</div>
+                <div className="px-4 py-1 rounded-md bg-black/50 border border-white/5 text-[10px] font-bold text-slate-500 tracking-wider">
+                  studenthub.id
+                </div>
               </div>
-              <div className="flex-grow flex flex-col justify-center items-center py-4 text-center">
-                <GraduationCap className="h-10 w-10 text-blue-500 mb-2 animate-bounce" />
-                <span className="text-xs font-semibold text-slate-300">Ekosistem Marketplace Mahasiswa</span>
-                <span className="text-[10px] text-slate-500 mt-1">Verified NIM • Secured Payment Escrow</span>
+              <div className="flex-grow flex flex-col justify-center items-center py-4 text-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.1),transparent_60%)]" />
+                <GraduationCap className="h-16 w-16 text-cyan-400 mb-4 animate-bounce relative z-10 drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]" />
+                <span className="text-base font-black text-white relative z-10 tracking-wide">Ekosistem Marketplace Mahasiswa</span>
+                <span className="text-[11px] font-bold text-slate-500 mt-2 tracking-widest uppercase relative z-10">
+                  Verified NIM • Secured Escrow
+                </span>
               </div>
             </div>
-            {/* Hover overlay text */}
-            <div className="mt-6 flex justify-around text-center text-xs border-t border-slate-900 pt-6">
+
+            {/* Hover overlay stats */}
+            <div className="mt-8 flex justify-around text-center text-xs border-t border-white/10 pt-8 relative z-10">
               <div>
-                <p className="font-bold text-white">4.8/5</p>
-                <p className="text-slate-500 text-[10px] uppercase">Rating Rata-rata</p>
+                <p className="font-black text-white text-2xl drop-shadow-md">4.9/5</p>
+                <p className="text-cyan-400 font-black text-[9px] uppercase tracking-widest mt-2">Rating Klien</p>
               </div>
               <div>
-                <p className="font-bold text-white">100%</p>
-                <p className="text-slate-500 text-[10px] uppercase">Mahasiswa Aktif</p>
+                <p className="font-black text-white text-2xl drop-shadow-md">100%</p>
+                <p className="text-cyan-400 font-black text-[9px] uppercase tracking-widest mt-2">NIM Tervalidasi</p>
               </div>
               <div>
-                <p className="font-bold text-white">&lt; 24 Jam</p>
-                <p className="text-slate-500 text-[10px] uppercase">Respon Rata-rata</p>
+                <p className="font-black text-white text-2xl drop-shadow-md">&lt; 24h</p>
+                <p className="text-cyan-400 font-black text-[9px] uppercase tracking-widest mt-2">Respon Cepat</p>
               </div>
             </div>
           </div>
 
           {/* Benefits Info */}
-          <div className="space-y-8">
+          <div className="space-y-10">
             <div>
-              <Badge variant="primary" className="mb-3">Keuntungan Utama</Badge>
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
-                Platform terpercaya khusus ekosistem kampus
+              <span className="inline-block px-3 py-1 mb-4 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest">
+                Keuntungan Utama
+              </span>
+              <h2 className="text-3xl sm:text-5xl font-black text-white leading-[1.15]">
+                Platform terpercaya ekosistem kampus
               </h2>
-              <p className="text-slate-400 mt-4 leading-relaxed">
+              <p className="text-slate-400 mt-5 text-base leading-relaxed font-medium">
                 Kami membangun StudentHub dengan mengutamakan keamanan transaksi dan kredibilitas talenta. Setiap freelancer adalah mahasiswa aktif yang terverifikasi.
               </p>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex gap-4 items-start">
-                <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-500">
-                  <ShieldCheck className="h-5 w-5" />
+            <div className="space-y-8">
+              <div className="flex gap-5 items-start group">
+                <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
+                  <ShieldCheck className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Verifikasi NIM (Nomor Induk Mahasiswa)</h3>
-                  <p className="text-sm text-slate-400 mt-1">Setiap akun penyedia jasa wajib melewati verifikasi NIM aktif demi memastikan validitas profil akademisnya.</p>
+                  <h3 className="text-lg font-bold text-white mb-2">Verifikasi NIM Resmi</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">Setiap penyedia jasa wajib melewati verifikasi KTM/NIM aktif untuk memastikan validitas profil akademisnya.</p>
                 </div>
               </div>
 
-              <div className="flex gap-4 items-start">
-                <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-500">
-                  <Lock className="h-5 w-5" />
+              <div className="flex gap-5 items-start group">
+                <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
+                  <Lock className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Sistem Rekening Bersama Aman</h3>
-                  <p className="text-sm text-slate-400 mt-1">Dana Anda akan disimpan di escrow platform dan hanya akan dicairkan ke mahasiswa setelah Anda menyetujui hasil kerjanya.</p>
+                  <h3 className="text-lg font-bold text-white mb-2">Sistem Rekening Bersama (Escrow)</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">Dana Anda aman di escrow platform dan hanya akan diteruskan ke freelancer setelah Anda menyetujui hasil kerjanya.</p>
                 </div>
               </div>
 
-              <div className="flex gap-4 items-start">
-                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
-                  <Coins className="h-5 w-5" />
+              <div className="flex gap-5 items-start group">
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                  <Coins className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Harga Terjangkau & Berkualitas</h3>
-                  <p className="text-sm text-slate-400 mt-1">Dapatkan tarif jasa yang bersahabat disesuaikan dengan anggaran mahasiswa dan bisnis UKM, tanpa kompromi kualitas.</p>
+                  <h3 className="text-lg font-bold text-white mb-2">Harga Bersahabat</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">Dapatkan tarif jasa yang disesuaikan dengan anggaran mahasiswa dan UKM, tanpa kompromi pada kualitas.</p>
                 </div>
               </div>
             </div>
@@ -252,98 +284,110 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-slate-900" id="how-it-works">
-        <div className="text-center mb-16">
-          <Badge variant="primary" className="mb-3">Alur Penggunaan</Badge>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Cara Kerja yang Simpel & Aman</h2>
-          <p className="text-sm text-slate-400 mt-2 max-w-md mx-auto">Tiga langkah mudah untuk menyelesaikan tugas akademis maupun proyek bisnis Anda.</p>
+      {/* --- HOW IT WORKS --- */}
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-32 border-t border-white/5 bg-[#050810]/50" id="how-it-works">
+        <div className="text-center mb-20 relative z-10">
+          <span className="inline-block px-3 py-1 mb-4 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
+            Alur Penggunaan
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-black text-white">Simpel & Sangat Aman</h2>
+          <p className="text-base text-slate-400 mt-4 max-w-lg mx-auto font-medium">Tiga langkah mudah untuk menyelesaikan tugas akademis maupun proyek bisnis Anda bersama StudentHub.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
-          {/* Connector Line (Desktop) */}
-          <div className="hidden md:block absolute top-[35px] left-[15%] right-[15%] h-[1px] bg-slate-800 z-0" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-16 relative">
+          {/* Connector Line */}
+          <div className="hidden md:block absolute top-[45px] left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-transparent via-slate-700 to-transparent z-0" />
 
           {/* Step 1 */}
           <div className="text-center relative z-10 flex flex-col items-center group">
-            <div className="w-16 h-16 rounded-full bg-slate-900 border-2 border-slate-800 flex items-center justify-center mb-6 group-hover:border-blue-500 transition-colors shadow-lg">
-              <Search className="h-6 w-6 text-slate-400 group-hover:text-blue-500 transition-colors" />
+            <div className="w-24 h-24 rounded-full bg-[#0B1121] border border-white/10 flex items-center justify-center mb-8 group-hover:border-cyan-500 group-hover:shadow-[0_0_30px_rgba(6,182,212,0.3)] transition-all duration-300">
+              <Search className="h-10 w-10 text-slate-400 group-hover:text-cyan-400 transition-colors" />
             </div>
-            <div className="absolute top-0 right-[40%] text-6xl font-black text-slate-900 select-none -z-10 group-hover:text-slate-850 transition-colors">1</div>
-            <h3 className="text-lg font-bold text-white">Cari & Pilih</h3>
-            <p className="text-sm text-slate-400 mt-2 max-w-xs">
-              Temukan jenis layanan yang Anda butuhkan, filter berdasarkan kategori, dan pilih freelancer terbaik.
+            <div className="absolute top-[-20px] right-[25%] md:right-[30%] text-[100px] font-black text-white/[0.03] select-none -z-10 group-hover:text-cyan-500/10 transition-colors duration-500">1</div>
+            <h3 className="text-xl font-black text-white mb-3">Cari & Pilih</h3>
+            <p className="text-sm text-slate-400 max-w-xs leading-relaxed font-medium">
+              Temukan jenis layanan yang Anda butuhkan, filter berdasarkan kategori, dan pilih freelancer mahasiswa terbaik.
             </p>
           </div>
 
           {/* Step 2 */}
           <div className="text-center relative z-10 flex flex-col items-center group">
-            <div className="w-16 h-16 rounded-full bg-slate-900 border-2 border-slate-800 flex items-center justify-center mb-6 group-hover:border-blue-500 transition-colors shadow-lg">
-              <MessageSquare className="h-6 w-6 text-slate-400 group-hover:text-blue-500 transition-colors" />
+            <div className="w-24 h-24 rounded-full bg-[#0B1121] border border-white/10 flex items-center justify-center mb-8 group-hover:border-purple-500 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] transition-all duration-300">
+              <MessageSquare className="h-10 w-10 text-slate-400 group-hover:text-purple-400 transition-colors" />
             </div>
-            <div className="absolute top-0 right-[40%] text-6xl font-black text-slate-900 select-none -z-10 group-hover:text-slate-850 transition-colors">2</div>
-            <h3 className="text-lg font-bold text-white">Pesan & Diskusi</h3>
-            <p className="text-sm text-slate-400 mt-2 max-w-xs">
-              Diskusikan detail proyek Anda secara langsung, tetapkan kebutuhan spesifik, dan tentukan tenggat waktu pengerjaan.
+            <div className="absolute top-[-20px] right-[25%] md:right-[30%] text-[100px] font-black text-white/[0.03] select-none -z-10 group-hover:text-purple-500/10 transition-colors duration-500">2</div>
+            <h3 className="text-xl font-black text-white mb-3">Pesan & Diskusi</h3>
+            <p className="text-sm text-slate-400 max-w-xs leading-relaxed font-medium">
+              Diskusikan detail proyek secara langsung melalui chat, tetapkan spesifikasi, dan sepakati tenggat waktu.
             </p>
           </div>
 
           {/* Step 3 */}
           <div className="text-center relative z-10 flex flex-col items-center group">
-            <div className="w-16 h-16 rounded-full bg-slate-900 border-2 border-slate-800 flex items-center justify-center mb-6 group-hover:border-blue-500 transition-colors shadow-lg">
-              <CheckCircle className="h-6 w-6 text-slate-400 group-hover:text-blue-500 transition-colors" />
+            <div className="w-24 h-24 rounded-full bg-[#0B1121] border border-white/10 flex items-center justify-center mb-8 group-hover:border-emerald-500 group-hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] transition-all duration-300">
+              <CheckCircle className="h-10 w-10 text-slate-400 group-hover:text-emerald-400 transition-colors" />
             </div>
-            <div className="absolute top-0 right-[40%] text-6xl font-black text-slate-900 select-none -z-10 group-hover:text-slate-850 transition-colors">3</div>
-            <h3 className="text-lg font-bold text-white">Terima Hasil</h3>
-            <p className="text-sm text-slate-400 mt-2 max-w-xs">
-              Periksa hasil pengerjaan, berikan persetujuan, lalu cairkan pembayaran jika Anda sudah puas dengan hasilnya.
+            <div className="absolute top-[-20px] right-[25%] md:right-[30%] text-[100px] font-black text-white/[0.03] select-none -z-10 group-hover:text-emerald-500/10 transition-colors duration-500">3</div>
+            <h3 className="text-xl font-black text-white mb-3">Terima Hasil</h3>
+            <p className="text-sm text-slate-400 max-w-xs leading-relaxed font-medium">
+              Periksa hasil pengerjaan, setujui, dan dana baru akan dicairkan ke freelancer setelah Anda merasa puas.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-slate-900">
+      {/* --- CATEGORIES --- */}
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-white/5">
         <div className="text-center mb-16">
-          <Badge variant="primary" className="mb-3">Kategori</Badge>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Eksplorasi Berbagai Kategori</h2>
-          <p className="text-sm text-slate-400 mt-2 max-w-md mx-auto">Kami menyediakan talenta dari berbagai bidang keahlian akademis untuk membantu Anda.</p>
+          <span className="inline-block px-3 py-1 mb-4 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest">
+            Kategori Utama
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-black text-white">Eksplorasi Keahlian</h2>
+          <p className="text-sm text-slate-400 mt-4 max-w-md mx-auto font-medium">Kami menyediakan talenta dari berbagai disiplin ilmu akademis.</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((cat, index) => (
-            <Card key={index} hoverEffect className="p-6 flex flex-col items-start gap-4">
-              <div className="p-3 rounded-lg bg-slate-900 border border-slate-800">
+            <div key={index} className="p-8 rounded-2xl bg-[#0B1121]/80 backdrop-blur-md border border-white/10 hover:border-cyan-500/50 flex flex-col items-center text-center gap-5 hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(6,182,212,0.1)] transition-all duration-300 cursor-pointer group">
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/5 group-hover:scale-110 transition-transform">
                 {cat.icon}
               </div>
               <div>
-                <CardTitle className="text-base font-bold">{cat.name}</CardTitle>
-                <CardDescription className="text-xs text-slate-500 mt-1">{cat.count} Tersedia</CardDescription>
+                <h3 className="text-lg font-black text-white group-hover:text-cyan-400 transition-colors mb-1">{cat.name}</h3>
+                <p className="text-xs font-bold text-slate-500 tracking-wider uppercase">{cat.count} Tersedia</p>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="relative rounded-2xl overflow-hidden p-8 sm:p-12 md:p-16 bg-gradient-to-r from-blue-900/60 to-indigo-950/60 border border-blue-500/20 text-center shadow-2xl">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(59,130,246,0.1),transparent_50%)]" />
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4 relative z-10">
-            Mulai Perjalanan Akademik yang Lebih Mudah
+      {/* --- CTA BANNER --- */}
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 mb-20">
+        <div className="relative rounded-[2rem] overflow-hidden p-10 sm:p-16 md:p-20 bg-gradient-to-br from-blue-900 to-indigo-950 border border-blue-500/20 text-center shadow-2xl">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.2),transparent_70%)]" />
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+
+          <h2 className="text-3xl sm:text-5xl font-black text-white mb-6 relative z-10 drop-shadow-lg leading-tight">
+            Mulai Perjalanan Akademik <br className="hidden sm:block" /> Lebih Mudah
           </h2>
-          <p className="text-sm sm:text-base text-slate-300 max-w-xl mx-auto mb-8 relative z-10">
-            Temukan mahasiswa bertalenta untuk membantu proyek Anda, atau mulailah menawarkan keahlian Anda untuk mendapatkan penghasilan tambahan di kampus.
+          <p className="text-base sm:text-lg font-medium text-blue-100 max-w-2xl mx-auto mb-10 relative z-10 leading-relaxed opacity-90">
+            Temukan mahasiswa bertalenta untuk membantu proyekmu, atau daftarkan keahlianmu sekarang untuk mendapatkan penghasilan tambahan di sela-sela waktu kuliah.
           </p>
-          <div className="relative z-10">
+          <div className="relative z-10 flex flex-col sm:flex-row gap-5 justify-center">
             <Link href="/register">
-              <Button variant="gradient" size="lg" className="px-8 shadow-xl">
-                Daftar Sekarang
-              </Button>
+              <button className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white text-blue-900 font-black text-sm hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300">
+                Daftar Sebagai Klien
+              </button>
+            </Link>
+            <Link href="/register">
+              <button className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/10 border border-white/20 text-white font-black text-sm hover:bg-white/20 backdrop-blur-md transition-all duration-300">
+                Mulai Freelance
+              </button>
             </Link>
           </div>
         </div>
       </section>
+
     </div>
   );
 }
