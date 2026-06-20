@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Filter, MessageSquare, Inbox, ChevronDown, AlertCircle, X, CheckCircle2 } from 'lucide-react';
+import { Search, Filter, MessageSquare, Inbox, ChevronDown, AlertCircle, X, CheckCircle2, FileText } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -33,6 +33,7 @@ export default function OrdersClient({ initialOrders }: { initialOrders: OrderIt
   const [successMsg, setSuccessMsg] = React.useState('');
   const [errorMsg, setErrorMsg] = React.useState('');
   const [confirmConfig, setConfirmConfig] = React.useState<{ isOpen: boolean, msg: string, action: (() => void) | null }>({ isOpen: false, msg: '', action: null });
+  const [selectedOrderReceipt, setSelectedOrderReceipt] = React.useState<OrderItem | null>(null);
 
   const supabase = createClient();
   const router = useRouter();
@@ -288,6 +289,14 @@ export default function OrdersClient({ initialOrders }: { initialOrders: OrderIt
                   <td className="py-4 px-6">
                     <div className="font-bold text-slate-900 dark:text-white text-sm">ORD-{order.id.slice(0, 5).toUpperCase()}</div>
                     <div className="text-xs text-slate-500 mt-1 line-clamp-1 max-w-[200px]" title={order.service?.title}>{order.service?.title}</div>
+                    {order.requirements && (
+                      <button
+                        onClick={() => setSelectedOrderReceipt(order)}
+                        className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors"
+                      >
+                        <FileText className="w-3.5 h-3.5" /> Lihat Bukti Transfer
+                      </button>
+                    )}
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
@@ -445,6 +454,112 @@ export default function OrdersClient({ initialOrders }: { initialOrders: OrderIt
           </div>
         </div>
       )}
+
+      {/* 4. PAYMENT RECEIPT MODAL */}
+      {selectedOrderReceipt && (() => {
+        let paymentData: any = null;
+        try {
+          if (selectedOrderReceipt.requirements) {
+            paymentData = JSON.parse(selectedOrderReceipt.requirements);
+          }
+        } catch (e) {
+          console.error("Error parsing requirements JSON:", e);
+        }
+
+        return (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300 animate-in fade-in duration-200">
+            <div className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827] shadow-2xl overflow-hidden animate-in zoom-in duration-200 max-h-[90vh] flex flex-col text-slate-900 dark:text-white">
+              {/* Header */}
+              <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+                <div className="flex items-center gap-2 text-cyan-500">
+                  <FileText className="w-5 h-5" />
+                  <h3 className="font-bold text-slate-900 dark:text-white">Bukti Pembayaran Client</h3>
+                </div>
+                <button
+                  onClick={() => setSelectedOrderReceipt(null)}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 overflow-y-auto space-y-5">
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <span className="text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider text-[9px]">ID Order</span>
+                    <span className="font-bold">ORD-{selectedOrderReceipt.id.slice(0, 5).toUpperCase()}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider text-[9px]">Total Harga</span>
+                    <span className="font-bold text-cyan-600 dark:text-cyan-400">Rp {Number(selectedOrderReceipt.price).toLocaleString('id-ID')}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider text-[9px]">Metode Pembayaran</span>
+                    <span className="font-bold">{paymentData?.payment_method || "Transfer Bank"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider text-[9px]">Nama Pengirim</span>
+                    <span className="font-bold">{paymentData?.sender_name || "Tidak diisi"}</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+                  <span className="text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider text-[9px] mb-2">Foto / Struk Bukti Transfer</span>
+                  
+                  {paymentData?.receipt_url ? (
+                    <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 max-h-[300px] flex items-center justify-center">
+                      <img
+                        src={paymentData.receipt_url}
+                        alt="Bukti Transfer"
+                        className="max-h-[300px] w-full object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+                      <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">Berkas bukti transfer tidak ditemukan.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action */}
+              <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end gap-3 flex-shrink-0">
+                {selectedOrderReceipt.status === 'pending' && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setSelectedOrderReceipt(null);
+                        handleStatusChange(selectedOrderReceipt.id, 'cancelled');
+                      }}
+                      className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-sm font-bold rounded-xl transition-all"
+                    >
+                      Tolak Order
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedOrderReceipt(null);
+                        handleStatusChange(selectedOrderReceipt.id, 'in_progress');
+                      }}
+                      className="px-5 py-2 bg-cyan-500 hover:bg-cyan-600 text-white dark:text-[#0f1219] text-sm font-bold rounded-xl transition-all"
+                    >
+                      Terima Order
+                    </button>
+                  </>
+                )}
+                {selectedOrderReceipt.status !== 'pending' && (
+                  <button
+                    onClick={() => setSelectedOrderReceipt(null)}
+                    className="px-6 py-2 bg-slate-900 dark:bg-white dark:text-slate-900 text-white text-sm font-bold rounded-xl transition-all"
+                  >
+                    Tutup
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );

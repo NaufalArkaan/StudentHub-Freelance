@@ -175,16 +175,23 @@ export default function ServiceDetailPage() {
     };
 
     // LOGIKA UTAMA: Menyimpan Pesanan ke Database Supabase
-    const handlePaymentSuccess = async () => {
+    const handlePaymentSuccess = async (receiptUrl?: string, sender?: string, method?: string) => {
         if (!currentUser || !service) return;
         setIsProcessingOrder(true);
 
         try {
+            const paymentPayload = {
+                receipt_url: receiptUrl || '',
+                sender_name: sender || '',
+                payment_method: method || '',
+            };
+
             const { error } = await supabase.from('orders').insert({
                 service_id: service.id,
                 client_id: currentUser.id,
                 price: service.price,
                 status: 'pending',
+                requirements: JSON.stringify(paymentPayload),
             });
 
             if (error) throw error;

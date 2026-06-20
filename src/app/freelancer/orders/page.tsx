@@ -21,6 +21,7 @@ export default async function FreelancerOrdersPage() {
       status,
       price,
       created_at,
+      requirements,
       service:services!inner(title, price, freelancer_id),
       client_user:users!orders_client_id_fkey(
         profile:profiles(full_name, avatar_url)
@@ -38,6 +39,7 @@ export default async function FreelancerOrdersPage() {
     status: order.status,
     price: order.price,
     created_at: order.created_at,
+    requirements: order.requirements,
     service: order.service,
     client: {
       full_name: order.client_user?.profile?.full_name || 'Client',
