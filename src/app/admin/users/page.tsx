@@ -40,7 +40,18 @@ function UsersContent() {
   const [roleFilter, setRoleFilter] = React.useState('All');
   const [statusFilter, setStatusFilter] = React.useState('All');
 
-  const [users, setUsers] = React.useState<any[]>([]);
+  interface UserItem {
+    id: string;
+    name: string;
+    nim: string;
+    email: string;
+    role: string;
+    status: string;
+    avatar_url?: string;
+    avatarColor: string;
+  }
+
+  const [users, setUsers] = React.useState<UserItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -82,7 +93,21 @@ function UsersContent() {
       if (error) throw error;
 
       if (data) {
-        const formattedUsers = data.map((u: any) => {
+        const formattedUsers = data.map((u: {
+          id: string;
+          email: string | null;
+          role: string | null;
+          status: string | null;
+          profiles: {
+            full_name: string | null;
+            nim: string | null;
+            avatar_url: string | null;
+          } | {
+            full_name: string | null;
+            nim: string | null;
+            avatar_url: string | null;
+          }[] | null;
+        }) => {
           const profileData = Array.isArray(u.profiles) ? u.profiles[0] : u.profiles;
           const userRole = (u.role || 'client').toLowerCase();
           const userStatus = (u.status || 'active').toLowerCase();
@@ -105,7 +130,7 @@ function UsersContent() {
             email: u.email || 'Email tidak ditemukan',
             role: userRole,
             status: userStatus,
-            avatar_url: profileData?.avatar_url,
+            avatar_url: profileData?.avatar_url || undefined,
             avatarColor: avatarColor
           };
         });
@@ -117,10 +142,12 @@ function UsersContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase]);
+  }, [supabase, setErrorMsg]);
 
   React.useEffect(() => {
-    fetchUsers();
+    Promise.resolve().then(() => {
+      fetchUsers();
+    });
   }, [fetchUsers]);
 
   const openConfirmModal = (id: string, name: string, currentStatus: string) => {
@@ -145,9 +172,10 @@ function UsersContent() {
       setConfirmModal({ isOpen: false, userId: '', userName: '', currentStatus: '', targetStatus: '' });
       showSuccess(`Status akun "${userName}" berhasil diubah menjadi ${targetStatus.toUpperCase()}.`);
 
-    } catch (error: any) {
-      console.error("Gagal update status di database:", error);
-      setErrorMsg("Terjadi kesalahan sistem saat menyimpan status: " + error.message);
+    } catch (error) {
+      const err = error as Error;
+      console.error("Gagal update status di database:", err);
+      setErrorMsg("Terjadi kesalahan sistem saat menyimpan status: " + err.message);
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: currentStatus } : u));
       setConfirmModal(prev => ({ ...prev, isOpen: false }));
     } finally {
@@ -373,7 +401,7 @@ function UsersContent() {
             </div>
             <div className="p-6">
               <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-                Apakah Anda yakin ingin {confirmModal.targetStatus === 'suspended' ? 'menskors (memblokir)' : 'mengaktifkan kembali'} akun <span className="font-bold text-slate-900 dark:text-white">"{confirmModal.userName}"</span>?
+                Apakah Anda yakin ingin {confirmModal.targetStatus === 'suspended' ? 'menskors (memblokir)' : 'mengaktifkan kembali'} akun <span className="font-bold text-slate-900 dark:text-white">&quot;{confirmModal.userName}&quot;</span>?
                 {confirmModal.targetStatus === 'suspended' && " Pengguna ini tidak akan bisa menggunakan layanan platform."}
               </p>
             </div>

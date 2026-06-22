@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import * as React from 'react';
@@ -207,7 +205,9 @@ function InboxContent() {
 
   React.useEffect(() => {
     if (activeThreadId) {
-      fetchChatMessages(activeThreadId);
+      Promise.resolve().then(() => {
+        fetchChatMessages(activeThreadId);
+      });
     }
   }, [activeThreadId, fetchChatMessages]);
 

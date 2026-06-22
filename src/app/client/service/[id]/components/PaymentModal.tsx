@@ -34,12 +34,14 @@ export default function PaymentModal({
     // Reset state on open/close
     useEffect(() => {
         if (open) {
-            setIsVerifying(false);
-            setVerificationStep(0);
-            setPaymentSuccess(false);
-            setReceiptFile(null);
-            setReceiptPreview(null);
-            setSenderName('');
+            Promise.resolve().then(() => {
+                setIsVerifying(false);
+                setVerificationStep(0);
+                setPaymentSuccess(false);
+                setReceiptFile(null);
+                setReceiptPreview(null);
+                setSenderName('');
+            });
         }
     }, [open]);
 

@@ -39,12 +39,32 @@ export default function AdminCategoriesPage() {
   );
 }
 
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+  servicesCount: number;
+  status: string;
+  icon: React.ReactNode;
+  iconBg: string;
+}
+
+const iconPresets = [
+  { icon: <Palette className="h-5 w-5 text-blue-600 dark:text-blue-400" />, bg: 'bg-blue-50 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20' },
+  { icon: <Terminal className="h-5 w-5 text-teal-600 dark:text-teal-400" />, bg: 'bg-teal-50 border-teal-200 dark:bg-teal-500/10 dark:border-teal-500/20' },
+  { icon: <GraduationCap className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />, bg: 'bg-indigo-50 border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/20' },
+  { icon: <Camera className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />, bg: 'bg-cyan-50 border-cyan-200 dark:bg-cyan-500/10 dark:border-cyan-500/20' },
+  { icon: <MonitorSmartphone className="h-5 w-5 text-fuchsia-600 dark:text-fuchsia-400" />, bg: 'bg-fuchsia-50 border-fuchsia-200 dark:bg-fuchsia-500/10 dark:border-fuchsia-500/20' },
+  { icon: <Briefcase className="h-5 w-5 text-amber-600 dark:text-amber-400" />, bg: 'bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20' },
+  { icon: <Layers className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />, bg: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20' },
+];
+
 function CategoriesContent() {
   const supabase = createClient();
   const searchParams = useSearchParams();
   const searchQuery = (searchParams.get('q') || '').toLowerCase();
 
-  const [categories, setCategories] = React.useState<any[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -64,16 +84,6 @@ function CategoriesContent() {
     id: '',
     name: ''
   });
-
-  const iconPresets = [
-    { icon: <Palette className="h-5 w-5 text-blue-600 dark:text-blue-400" />, bg: 'bg-blue-50 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20' },
-    { icon: <Terminal className="h-5 w-5 text-teal-600 dark:text-teal-400" />, bg: 'bg-teal-50 border-teal-200 dark:bg-teal-500/10 dark:border-teal-500/20' },
-    { icon: <GraduationCap className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />, bg: 'bg-indigo-50 border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/20' },
-    { icon: <Camera className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />, bg: 'bg-cyan-50 border-cyan-200 dark:bg-cyan-500/10 dark:border-cyan-500/20' },
-    { icon: <MonitorSmartphone className="h-5 w-5 text-fuchsia-600 dark:text-fuchsia-400" />, bg: 'bg-fuchsia-50 border-fuchsia-200 dark:bg-fuchsia-500/10 dark:border-fuchsia-500/20' },
-    { icon: <Briefcase className="h-5 w-5 text-amber-600 dark:text-amber-400" />, bg: 'bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20' },
-    { icon: <Layers className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />, bg: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20' },
-  ];
 
   const showSuccess = (msg: string) => {
     setSuccessMsg(msg);
@@ -97,8 +107,8 @@ function CategoriesContent() {
       if (svcError) throw svcError;
 
       if (catData) {
-        const formattedCategories = catData.map((cat: any, index: number) => {
-          const totalServices = svcData ? svcData.filter((s: any) => s.category_id === cat.id).length : 0;
+        const formattedCategories = catData.map((cat: { id: string; name: string | null; description: string | null; status: string | null; }, index: number) => {
+          const totalServices = svcData ? svcData.filter((s: { category_id: string | null; }) => s.category_id === cat.id).length : 0;
           const preset = iconPresets[index % iconPresets.length];
 
           return {
@@ -122,14 +132,16 @@ function CategoriesContent() {
   }, [supabase]);
 
   React.useEffect(() => {
-    fetchCategoriesData();
+    Promise.resolve().then(() => {
+      fetchCategoriesData();
+    });
   }, [fetchCategoriesData]);
 
   const openAddModal = () => {
     setFormModal({ isOpen: true, mode: 'add', id: '', name: '', description: '' });
   };
 
-  const openEditModal = (cat: any) => {
+  const openEditModal = (cat: Category) => {
     setFormModal({ isOpen: true, mode: 'edit', id: cat.id, name: cat.name, description: cat.description });
   };
 
@@ -183,9 +195,10 @@ function CategoriesContent() {
 
       setFormModal({ ...formModal, isOpen: false });
       fetchCategoriesData();
-    } catch (error: any) {
-      console.error("Error saving category:", error);
-      setErrorMsg(error.message || "Terjadi kesalahan saat menyimpan data ke database.");
+    } catch (error) {
+      const err = error as Error;
+      console.error("Error saving category:", err);
+      setErrorMsg(err.message || "Terjadi kesalahan saat menyimpan data ke database.");
     } finally {
       setIsSubmitting(false);
     }
@@ -208,9 +221,10 @@ function CategoriesContent() {
       showSuccess(`Kategori "${deleteModal.name}" berhasil dihapus dari sistem.`);
       setDeleteModal({ isOpen: false, id: '', name: '' });
       fetchCategoriesData();
-    } catch (error: any) {
-      console.error("Error deleting category:", error);
-      setErrorMsg(error.message || "Gagal menghapus kategori. Pastikan tidak ada layanan yang terkait dengan kategori ini.");
+    } catch (error) {
+      const err = error as Error;
+      console.error("Error deleting category:", err);
+      setErrorMsg(err.message || "Gagal menghapus kategori. Pastikan tidak ada layanan yang terkait dengan kategori ini.");
     } finally {
       setIsSubmitting(false);
     }
@@ -429,7 +443,7 @@ function CategoriesContent() {
             </div>
             <div className="p-6">
               <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-                Apakah Anda yakin ingin menghapus kategori <span className="font-bold text-slate-900 dark:text-white">"{deleteModal.name}"</span>? Tindakan ini dapat memengaruhi layanan aktif yang terhubung dengannya.
+                Apakah Anda yakin ingin menghapus kategori <span className="font-bold text-slate-900 dark:text-white">&quot;{deleteModal.name}&quot;</span>? Tindakan ini dapat memengaruhi layanan aktif yang terhubung dengannya.
               </p>
             </div>
             <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end gap-3">

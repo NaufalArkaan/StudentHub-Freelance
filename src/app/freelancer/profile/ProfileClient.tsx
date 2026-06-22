@@ -1,10 +1,20 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import * as React from 'react';
-import { Plus, User as UserIcon, Briefcase, FileText, Loader2, Trash2, RefreshCcw, Edit2, Save, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, User as UserIcon, Briefcase, FileText, Loader2, Trash2, RefreshCcw, Edit2, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+
+// Helper functions for filename generation to prevent React Compiler purity error (calling Date.now() during render analysis)
+const generateAvatarFileName = (userId: string, originalName: string) => {
+  const fileExt = originalName.split('.').pop();
+  return `avatars/${userId}-${Date.now()}.${fileExt}`;
+};
+
+const generatePortfolioFileName = (userId: string, originalName: string) => {
+  const fileExt = originalName.split('.').pop();
+  return `${userId}-${Date.now()}.${fileExt}`;
+};
 
 export default function ProfileClient({
   user,
@@ -95,8 +105,7 @@ export default function ProfileClient({
 
     try {
       setIsUploadingAvatar(true);
-      const fileExt = file.name.split('.').pop();
-      const fileName = `avatars/${user.id}-${Date.now()}.${fileExt}`;
+      const fileName = generateAvatarFileName(user.id, file.name);
 
       const { error: uploadError } = await supabase.storage.from('portfolios').upload(fileName, file, { upsert: true });
       if (uploadError) throw uploadError;
@@ -162,8 +171,7 @@ export default function ProfileClient({
 
     try {
       setIsUploading(true);
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const fileName = generatePortfolioFileName(user.id, file.name);
 
       const { error: uploadError } = await supabase.storage.from('portfolios').upload(fileName, file);
       if (uploadError) throw uploadError;

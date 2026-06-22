@@ -7,7 +7,6 @@ import {
   Eye,
   CheckCircle,
   CheckCircle2,
-  Clock,
   Laptop,
   Smartphone,
   Home,
@@ -42,8 +41,30 @@ function PortfolioContent() {
   const [loading, setLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const [freelancer, setFreelancer] = React.useState<any>(null);
-  const [portfolios, setPortfolios] = React.useState<any[]>([]);
+  interface FreelancerDetail {
+    id: string;
+    name: string;
+    nim?: string;
+    avatar_url?: string;
+    status: string;
+    created_at: string;
+    initials: string;
+  }
+
+  interface PortfolioItem {
+    id: string;
+    title: string;
+    category?: string;
+    description?: string;
+    image_url?: string;
+    link?: string;
+    url?: string;
+    project_url?: string;
+    portfolio_url?: string;
+  }
+
+  const [freelancer, setFreelancer] = React.useState<FreelancerDetail | null>(null);
+  const [portfolios, setPortfolios] = React.useState<PortfolioItem[]>([]);
 
   // State untuk Custom Modals
   const [successMsg, setSuccessMsg] = React.useState('');
@@ -121,6 +142,7 @@ function PortfolioContent() {
       if (error) throw error;
       showSuccess('Portofolio disetujui! Akun freelancer kini Aktif.');
     } catch (error) {
+      console.error("Approve error:", error);
       setErrorMsg('Gagal mengaktifkan akun. Silakan coba lagi.');
     } finally {
       setIsSubmitting(false);
@@ -135,6 +157,7 @@ function PortfolioContent() {
       if (error) throw error;
       showSuccess(`Portofolio ditolak dengan catatan: "${feedback || 'Tidak ada feedback'}"`);
     } catch (error) {
+      console.error("Reject error:", error);
       setErrorMsg('Gagal menolak akun. Silakan coba lagi.');
     } finally {
       setIsSubmitting(false);
@@ -160,7 +183,7 @@ function PortfolioContent() {
     });
   };
 
-  const handleOpenPortfolio = (port: any) => {
+  const handleOpenPortfolio = (port: PortfolioItem) => {
     const externalLink = port.link || port.url || port.project_url || port.portfolio_url;
 
     if (externalLink) {
@@ -496,7 +519,7 @@ function PortfolioContent() {
               <button onClick={() => setConfirmConfig({ isOpen: false, type: '', msg: '', action: null })} className="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors cursor-pointer">
                 Batal
               </button>
-              <button onClick={() => { setConfirmConfig({ isOpen: false, type: '', msg: '', action: null }); confirmConfig.action && confirmConfig.action() }} className={`px-6 py-2.5 text-white text-sm font-bold rounded-xl transition-all shadow-sm cursor-pointer ${confirmConfig.type === 'approve' ? 'bg-cyan-500 hover:bg-cyan-600' : 'bg-red-500 hover:bg-red-600'}`}>
+              <button onClick={() => { setConfirmConfig({ isOpen: false, type: '', msg: '', action: null }); if (confirmConfig.action) confirmConfig.action(); }} className={`px-6 py-2.5 text-white text-sm font-bold rounded-xl transition-all shadow-sm cursor-pointer ${confirmConfig.type === 'approve' ? 'bg-cyan-500 hover:bg-cyan-600' : 'bg-red-500 hover:bg-red-600'}`}>
                 {confirmConfig.type === 'approve' ? 'Ya, Setujui' : 'Ya, Tolak'}
               </button>
             </div>

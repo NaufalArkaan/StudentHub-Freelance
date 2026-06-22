@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -83,11 +82,11 @@ export default function ServiceDetailPage() {
                 if (serviceError) throw serviceError;
 
                 if (serviceData) {
-                    // 2. Ambil Data Review dari database (berdasarkan freelancer layanannya)
+                    // 2. Ambil Data Review dari database (berdasarkan layanan yang di-order)
                     const { data: reviewsData } = await supabase
                         .from('reviews')
-                        .select('*')
-                        .eq('service_id', id)
+                        .select('*, orders!inner(service_id)')
+                        .eq('orders.service_id', id)
                         .order('created_at', { ascending: false });
 
                     let formattedReviews: any[] = [];

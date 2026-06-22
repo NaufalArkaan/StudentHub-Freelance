@@ -7,40 +7,44 @@ import Image from 'next/image';
 import { ChevronLeft, ChevronDown, Heart, Star, Terminal } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
+const categoryConfig: Record<string, { title: string; desc: string }> = {
+    'programming-tech': {
+        title: 'Programming & Tech Services',
+        desc: 'Connect with skilled student developers for everything from quick bug fixes to full-stack applications and AI models.',
+    },
+    'cybersecurity': {
+        title: 'Cybersecurity & CTF Services',
+        desc: 'Learn ethical hacking, penetration testing, and secure your systems with top student experts.',
+    },
+    'ui-ux': {
+        title: 'Premium UI/UX Prototyping',
+        desc: 'Bring your app ideas to life with modern mockups and interactive prototypes.',
+    },
+    'web-development': {
+        title: 'Web Development',
+        desc: 'Create stunning and responsive websites tailored to your business needs.',
+    },
+    'default': {
+        title: 'Explore Services',
+        desc: 'Browse hundreds of services offered by verified students across all departments.',
+    }
+};
+
 export default function ClientExplore() {
     const router = useRouter();
     const params = useParams();
     const supabase = createClient();
 
-    // 1. DYNAMIC CATEGORY CONFIG
-    const categorySlug = (params?.category as string) || 'programming-tech';
-
-    const categoryConfig: Record<string, { title: string; desc: string }> = {
-        'programming-tech': {
-            title: 'Programming & Tech Services',
-            desc: 'Connect with skilled student developers for everything from quick bug fixes to full-stack applications and AI models.',
-        },
-        'cybersecurity': {
-            title: 'Cybersecurity & CTF Services',
-            desc: 'Learn ethical hacking, penetration testing, and secure your systems with top student experts.',
-        },
-        'ui-ux': {
-            title: 'Premium UI/UX Prototyping',
-            desc: 'Bring your app ideas to life with modern mockups and interactive prototypes.',
-        },
-        'web-development': {
-            title: 'Web Development',
-            desc: 'Create stunning and responsive websites tailored to your business needs.',
-        },
-        'default': {
-            title: 'Explore Services',
-            desc: 'Browse hundreds of services offered by verified students across all departments.',
-        }
-    };
-
-    const currentCategory = categoryConfig[categorySlug] || categoryConfig['default'];
+    // 1. GET DYNAMIC CATEGORY SLUG FROM PARAMETERS
+    const exploreParam = params?.explore;
+    const categorySlug = React.useMemo(() => {
+        if (!exploreParam) return 'programming-tech';
+        return Array.isArray(exploreParam) ? exploreParam[0] : exploreParam;
+    }, [exploreParam]);
 
     // 2. STATES
+    const [categoryName, setCategoryName] = React.useState('Explore Services');
+    const [categoryDesc, setCategoryDesc] = React.useState('Browse hundreds of services offered by verified students across all departments.');
     const [services, setServices] = React.useState<any[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
     const [favorites, setFavorites] = React.useState<Record<number, boolean>>({});
@@ -58,6 +62,13 @@ export default function ClientExplore() {
     const budgetOptions = ['Any Budget', 'Under Rp 50k', 'Rp 50k - Rp 150k', 'Over Rp 150k'];
     const sortOptions = ['Recommended', 'Highest Rated', 'Lowest Price'];
 
+    // Sync state with hardcoded categoryConfig initially
+    React.useEffect(() => {
+        const config = categoryConfig[categorySlug] || categoryConfig['default'];
+        setCategoryName(config.title);
+        setCategoryDesc(config.desc);
+    }, [categorySlug]);
+
     const toggleFavorite = (id: number) => {
         setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
     };
@@ -67,43 +78,64 @@ export default function ClientExplore() {
         const fetchServices = async () => {
             setIsLoading(true);
             try {
-                // KOREKSI DI SINI: Menghapus alias :freelancer_id agar join langsung ke tabel profiles
-                const { data, error } = await supabase
-                    .from('services')
-                    .select(`
-                        *,
-                        profiles (
-                            full_name, 
-                            avatar_url
-                        )
-                    `);
+                // 1. Ambil info kategori berdasarkan slug
+                const { data: catData, error: catError } = await supabase
+                    .from('categories')
+                    .select('id, name, description')
+                    .eq('slug', categorySlug)
+                    .single();
 
-                if (error) throw error;
+                if (catError) throw catError;
 
-                // Mapping data ke format UI
-                const formattedServices = (data || []).map((srv: any) => ({
-                    id: srv.id,
-                    title: srv.title || srv.name || 'Untitled Service',
-                    freelancerName: srv.profiles?.full_name || 'Freelancer',
-                    freelancerAvatar: srv.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${srv.freelancer_id}`,
-                    rating: srv.rating || 5.0,
-                    price: `Rp ${(srv.price || 0).toLocaleString('id-ID')}`,
-                    priceNum: srv.price || 0,
-                    deliveryDays: srv.delivery_time || 3,
-                    coverImage: srv.image_url || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop',
-                    tag: srv.tag || 'General',
-                }));
+                if (catData) {
+                    setCategoryName(catData.name);
+                    if (catData.description) {
+                        setCategoryDesc(catData.description);
+                    }
 
-                setServices(formattedServices);
+                    // 2. Ambil services yang sesuai dengan category_id
+                    const { data, error } = await supabase
+                        .from('services')
+                        .select(`
+                            *,
+                            profiles (
+                                full_name, 
+                                avatar_url
+                            )
+                        `)
+                        .eq('category_id', catData.id)
+                        .eq('is_active', true);
+
+                    if (error) throw error;
+
+                    // Mapping data ke format UI
+                    const formattedServices = (data || []).map((srv: any) => ({
+                        id: srv.id,
+                        title: srv.title || srv.name || 'Untitled Service',
+                        freelancerName: srv.profiles?.full_name || 'Freelancer',
+                        freelancerAvatar: srv.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${srv.freelancer_id}`,
+                        rating: srv.rating || 5.0,
+                        price: `Rp ${(srv.price || 0).toLocaleString('id-ID')}`,
+                        priceNum: srv.price || 0,
+                        deliveryDays: srv.delivery_time || 3,
+                        coverImage: srv.image_url || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop',
+                        tag: srv.tag || 'General',
+                    }));
+
+                    setServices(formattedServices);
+                } else {
+                    setServices([]);
+                }
             } catch (error) {
                 console.error("Gagal menarik data services:", error);
+                setServices([]);
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchServices();
-    }, [supabase]);
+    }, [supabase, categorySlug]);
 
     // 4. LOGIKA FILTER & SORTING
     const techStacks = ['All', ...Array.from(new Set(services.map((s) => s.tag)))];
@@ -170,10 +202,10 @@ export default function ClientExplore() {
 
                     <div className="space-y-2">
                         <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white transition-colors">
-                            {currentCategory.title}
+                            {categoryName}
                         </h1>
                         <p className="text-sm text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-                            {currentCategory.desc}
+                            {categoryDesc}
                         </p>
                     </div>
                 </div>

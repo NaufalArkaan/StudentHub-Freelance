@@ -20,6 +20,65 @@ export default function FreelancerLayout({
   const router = useRouter();
   const supabase = createClient();
 
+  // Check user suspension status on path change and setup real-time subscription
+  React.useEffect(() => {
+    let subscription: any = null;
+
+    const checkAndSubscribe = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // 1. Initial check on mount or path change
+        const { data: dbUser, error } = await supabase
+          .from('users')
+          .select('status')
+          .eq('id', user.id)
+          .single();
+
+        if (!error && dbUser && dbUser.status === 'suspended') {
+          await supabase.auth.signOut();
+          router.refresh();
+          router.push('/login?error=suspended');
+          return;
+        }
+
+        // 2. Real-time subscription to status updates
+        if (!subscription) {
+          subscription = supabase
+            .channel(`public-users-${user.id}`)
+            .on(
+              'postgres_changes',
+              {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'users',
+                filter: `id=eq.${user.id}`,
+              },
+              async (payload: any) => {
+                if (payload.new && payload.new.status === 'suspended') {
+                  await supabase.auth.signOut();
+                  router.refresh();
+                  router.push('/login?error=suspended');
+                }
+              }
+            )
+            .subscribe();
+        }
+      } catch (err) {
+        console.error('Error checking suspension status:', err);
+      }
+    };
+
+    checkAndSubscribe();
+
+    return () => {
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
+    };
+  }, [supabase, router, pathname]);
+
   // Load tema dari localStorage saat pertama kali mounted
   React.useEffect(() => {
     const savedTheme = localStorage.getItem('theme');

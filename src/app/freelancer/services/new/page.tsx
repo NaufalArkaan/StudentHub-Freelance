@@ -76,9 +76,10 @@ export default function AddServicePage() {
                 router.refresh();
             }, 2000);
 
-        } catch (error: any) {
-            console.error('Error adding service:', error);
-            setErrorMessage('Terjadi kesalahan pada sistem: ' + (error.message || 'Gagal menyimpan layanan.'));
+        } catch (error) {
+            const err = error as Error;
+            console.error('Error adding service:', err);
+            setErrorMessage('Terjadi kesalahan pada sistem: ' + (err.message || 'Gagal menyimpan layanan.'));
             setShowError(true);
         } finally {
             setLoading(false);

@@ -35,6 +35,17 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('error') === 'suspended') {
+        Promise.resolve().then(() => {
+          setErrorMsg('Akun Anda telah dinonaktifkan (suspended) oleh Admin. Silakan hubungi admin untuk informasi lebih lanjut.');
+        });
+      }
+    }
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -65,10 +76,10 @@ export default function LoginPage() {
       }
 
       if (authData?.user) {
-        // 2. Fetch role and profiles(nim) from database
+        // 2. Fetch role, status and profiles(nim) from database
         const { data: dbUser, error: dbError } = await supabase
           .from('users')
-          .select('role, profiles ( nim )')
+          .select('role, status, profiles ( nim )')
           .eq('id', authData.user.id)
           .single();
 
@@ -85,6 +96,12 @@ export default function LoginPage() {
           }
           redirectBasedOnRole(metadataRole);
         } else {
+          // Check if account is suspended
+          if (dbUser.status === 'suspended') {
+            await supabase.auth.signOut();
+            throw new Error('Akun Anda telah dinonaktifkan (suspended) oleh Admin. Silakan hubungi admin untuk informasi lebih lanjut.');
+          }
+
           // If the role is freelancer (mahasiswa), validate the NIM against the database profile
           if (dbUser.role === 'freelancer') {
             const profileNim = (dbUser.profiles as { nim?: string })?.nim;

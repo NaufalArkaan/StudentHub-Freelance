@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -283,7 +282,7 @@ export default function FreelancerDashboard() {
               </div>
             )) : (
               <div className="col-span-1 md:col-span-2 lg:col-span-4 flex flex-col items-center justify-center py-10 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">You haven't created any services yet.</p>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">You haven&apos;t created any services yet.</p>
               </div>
             )}
           </div>

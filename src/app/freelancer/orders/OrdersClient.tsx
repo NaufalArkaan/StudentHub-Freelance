@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import * as React from 'react';
@@ -17,6 +16,7 @@ type OrderItem = {
   service?: { title: string; price: number };
   client?: { full_name: string; avatar_url: string };
   client_id?: string;
+  requirements?: string;
 };
 
 export default function OrdersClient({ initialOrders }: { initialOrders: OrderItem[] }) {
@@ -47,7 +47,9 @@ export default function OrdersClient({ initialOrders }: { initialOrders: OrderIt
 
   // Sinkronisasi data jika ada perubahan props dari server
   React.useEffect(() => {
-    setOrders(initialOrders);
+    Promise.resolve().then(() => {
+      setOrders(initialOrders);
+    });
   }, [initialOrders]);
 
   // Menutup dropdown jika klik di luar area filter

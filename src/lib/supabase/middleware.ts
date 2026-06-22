@@ -43,23 +43,39 @@ export async function updateSession(request: NextRequest) {
   const isClientRoute = pathname.startsWith('/client');
 
   if (user) {
-    // User is logged in, fetch their role
-    // First, try reading from user_metadata to avoid DB query if possible
-    let role: UserRole = user.user_metadata?.role as UserRole;
+    // Query public.users to fetch role and status
+    const { data: dbUser, error: dbUserError } = await supabase
+      .from('users')
+      .select('role, status')
+      .eq('id', user.id)
+      .single();
 
-    if (!role) {
-      // Fallback: Query the public.users table
-      const { data: dbUser, error } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (!error && dbUser) {
-        role = dbUser.role as UserRole;
-      } else {
-        role = 'client'; // default fallback
+    let role: UserRole = 'client';
+    let status = 'active';
+
+    if (!dbUserError && dbUser) {
+      role = dbUser.role as UserRole;
+      status = dbUser.status || 'active';
+    } else {
+      // Fallback: Try reading from user_metadata if database query fails
+      role = (user.user_metadata?.role as UserRole) || 'client';
+    }
+
+    // If account is suspended, log the user out and block access
+    if (status === 'suspended') {
+      await supabase.auth.signOut();
+
+      if (pathname.startsWith('/api')) {
+        return NextResponse.json(
+          { error: 'Account is suspended' },
+          { status: 403 }
+        );
       }
+
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = '/login';
+      loginUrl.searchParams.set('error', 'suspended');
+      return NextResponse.redirect(loginUrl);
     }
 
     // Redirect logged-in users away from auth routes (login/register) to their respective dashboards

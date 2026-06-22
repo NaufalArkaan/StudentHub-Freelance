@@ -23,7 +23,9 @@ export default function ServicesList({ initialServices }: { initialServices: Ser
 
   // Memastikan UI tetap sinkron dengan data server saat ada refresh
   React.useEffect(() => {
-    setServices(initialServices);
+    Promise.resolve().then(() => {
+      setServices(initialServices);
+    });
   }, [initialServices]);
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {

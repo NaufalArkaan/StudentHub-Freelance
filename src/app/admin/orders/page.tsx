@@ -28,7 +28,25 @@ function OrdersContent() {
 
   const [statusFilter, setStatusFilter] = React.useState('All');
   const [timeFilter, setTimeFilter] = React.useState('Semua');
-  const [orders, setOrders] = React.useState<any[]>([]);
+
+  interface OrderItem {
+    id: string;
+    realId: string;
+    date: string;
+    createdAtStr: string;
+    service: string;
+    category: string;
+    freelancer: string;
+    freelancerInitials: string;
+    freelancerBg: string;
+    client: string;
+    clientInitials: string;
+    clientBg: string;
+    amount: number;
+    status: string;
+  }
+
+  const [orders, setOrders] = React.useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -69,7 +87,14 @@ function OrdersContent() {
           'bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-200 dark:border-sky-500/20'
         ];
 
-        const formattedOrders = ordersData.map((order: any, index: number) => {
+        const formattedOrders = ordersData.map((order: {
+          id: string;
+          created_at: string;
+          status: string | null;
+          price: number | string | null;
+          client_id: string | null;
+          service_id: string | null;
+        }, index: number) => {
           const service = serviceMap.get(order.service_id);
           const fName = profileMap.get(service?.freelancer_id) || 'Freelancer';
           const cName = profileMap.get(order.client_id) || 'Client';
@@ -87,21 +112,26 @@ function OrdersContent() {
             client: cName,
             clientInitials: getInitials(cName),
             clientBg: clientColors[index % clientColors.length],
-            amount: order.price || 0,
+            amount: Number(order.price) || 0,
             status: (order.status || 'pending').toLowerCase()
           };
         });
         setOrders(formattedOrders);
       }
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Terjadi kesalahan saat memuat data');
+    } catch (err) {
+      const errorObj = err as Error;
+      console.error(errorObj);
+      setError(errorObj.message || 'Terjadi kesalahan saat memuat data');
     } finally {
       setIsLoading(false);
     }
   }, [supabase]);
 
-  React.useEffect(() => { fetchGlobalOrders(); }, [fetchGlobalOrders]);
+  React.useEffect(() => {
+    Promise.resolve().then(() => {
+      fetchGlobalOrders();
+    });
+  }, [fetchGlobalOrders]);
 
   const handleViewDetail = (id: string) => {
     router.push(`/admin/orders/${id}`);

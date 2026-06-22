@@ -17,13 +17,29 @@ export default function AdminDashboardPage() {
   const supabase = createClient();
 
   const [isLoading, setIsLoading] = React.useState(true);
+
+  interface DashboardRecentOrder {
+    id: string;
+    service: string;
+    status: string;
+  }
+
+  interface DashboardRecentReport {
+    id: string;
+    name: string;
+    initials: string;
+    bg: string;
+    reason: string;
+    action: 'resolved' | 'review';
+  }
+
   const [dashboardData, setDashboardData] = React.useState({
     totalUsers: 0,
     activeServices: 0,
     totalOrders: 0,
     revenue: 0,
-    recentOrders: [] as any[],
-    recentReports: [] as any[]
+    recentOrders: [] as DashboardRecentOrder[],
+    recentReports: [] as DashboardRecentReport[]
   });
 
   const fetchDashboardData = React.useCallback(async () => {
@@ -48,9 +64,9 @@ export default function AdminDashboardPage() {
         supabase.from('reports').select('*').order('created_at', { ascending: false }).limit(4)
       ]);
 
-      const totalRevenue = revenueData?.reduce((sum, order: any) => sum + (Number(order.price) || 0), 0) || 0;
+      const totalRevenue = revenueData?.reduce((sum, order: { price: number | string }) => sum + (Number(order.price) || 0), 0) || 0;
 
-      const formattedOrders = recentOrdersData ? recentOrdersData.map((o: any) => {
+      const formattedOrders = recentOrdersData ? (recentOrdersData as unknown as { id: string; status: string; service: { title: string } | { title: string }[] | null }[]).map((o) => {
         const serviceData = Array.isArray(o.service) ? o.service[0] : o.service;
         return {
           id: `#ORD-${o.id.split('-')[0].toUpperCase()}`,
@@ -59,7 +75,7 @@ export default function AdminDashboardPage() {
         };
       }) : [];
 
-      let formattedReports: any[] = [];
+      let formattedReports: DashboardRecentReport[] = [];
       if (!reportsError && recentReportsData && recentReportsData.length > 0) {
         const reporterIds = [...new Set(recentReportsData.map(r => r.reporter_id || r.user_id).filter(Boolean))];
         let profileMap = new Map();
@@ -108,7 +124,9 @@ export default function AdminDashboardPage() {
   }, [supabase]);
 
   React.useEffect(() => {
-    fetchDashboardData();
+    Promise.resolve().then(() => {
+      fetchDashboardData();
+    });
   }, [fetchDashboardData]);
 
   const formatCompactNumber = (number: number) => {

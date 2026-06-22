@@ -105,9 +105,10 @@ export default function EditServicePage() {
                 router.refresh();
             }, 2000);
 
-        } catch (error: any) {
-            console.error('Error updating service:', error);
-            setErrorMessage('Terjadi kesalahan sistem: ' + (error.message || 'Gagal menyimpan perubahan.'));
+        } catch (error) {
+            const err = error as Error;
+            console.error('Error updating service:', err);
+            setErrorMessage('Terjadi kesalahan sistem: ' + (err.message || 'Gagal menyimpan perubahan.'));
             setShowError(true);
         } finally {
             setLoading(false);

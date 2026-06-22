@@ -23,6 +23,7 @@ create table public.profiles (
   full_name text not null,
   nim text unique,
   program_study text,
+  bio text, -- Detailed description of freelancer
   skills text[], -- Tag array of expertise for freelancer
   github_url text,
   linkedin_url text,
@@ -232,3 +233,20 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- AUTOMATIC UPDATE SYNC TRIGGER (Sync email updates from auth.users to public.users)
+create or replace function public.handle_update_user()
+returns trigger as $$
+begin
+  update public.users
+  set email = new.email
+  where id = new.id;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+-- Drop trigger if it already exists, then create it
+drop trigger if exists on_auth_user_updated on auth.users;
+create trigger on_auth_user_updated
+  after update of email on auth.users
+  for each row execute procedure public.handle_update_user();

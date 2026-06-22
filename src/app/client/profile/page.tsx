@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Mail, User, GraduationCap, IdCard } from "lucide-react";
+import { CheckCircle2, Mail, User, GraduationCap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ProfilePage() {
@@ -15,6 +15,8 @@ export default function ProfilePage() {
 
     const supabase = createClient();
     const [showSuccess, setShowSuccess] = useState(false);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [isEmailPending, setIsEmailPending] = useState(false);
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -57,7 +59,7 @@ export default function ProfilePage() {
         };
 
         loadProfile();
-    }, []);
+    }, [supabase]);
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -69,25 +71,67 @@ export default function ProfilePage() {
     };
 
     const handleSave = async () => {
+        setErrorMsg(null);
+        setIsEmailPending(false);
+
         const {
             data: { user },
         } = await supabase.auth.getUser();
 
-        await supabase
-            .from("profiles")
-            .update({
-                full_name: profile.name,
-                program_study: profile.major,
-            })
-            .eq("id", user?.id);
+        if (!user) {
+            setErrorMsg("User tidak ditemukan.");
+            return;
+        }
 
-        window.dispatchEvent(new Event("profileUpdated"));
+        // Validasi Email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!profile.email) {
+            setErrorMsg("Email wajib diisi.");
+            return;
+        }
+        if (!emailRegex.test(profile.email)) {
+            setErrorMsg("Format email tidak valid.");
+            return;
+        }
+        if (!profile.email.endsWith(".ac.id") && !profile.email.endsWith(".edu")) {
+            setErrorMsg("Harus menggunakan email institusi kampus (.ac.id atau .edu).");
+            return;
+        }
 
-        setShowSuccess(true);
+        try {
+            // 1. Update tabel profiles
+            const { error: profileError } = await supabase
+                .from("profiles")
+                .update({
+                    full_name: profile.name,
+                    program_study: profile.major,
+                })
+                .eq("id", user.id);
 
-        setTimeout(() => {
-            setShowSuccess(false);
-        }, 2000);
+            if (profileError) throw profileError;
+
+            // 2. Update email auth jika ada perubahan
+            if (profile.email !== user.email) {
+                const { data: updateData, error: emailError } = await supabase.auth.updateUser({
+                    email: profile.email,
+                });
+                if (emailError) throw emailError;
+
+                if (updateData?.user?.new_email) {
+                    setIsEmailPending(true);
+                }
+            }
+
+            window.dispatchEvent(new Event("profileUpdated"));
+            setShowSuccess(true);
+
+            setTimeout(() => {
+                setShowSuccess(false);
+            }, 3000);
+        } catch (error: any) {
+            console.error("Error updating profile:", error);
+            setErrorMsg(error.message || "Terjadi kesalahan saat memperbarui profil.");
+        }
     };
 
     return (
@@ -147,6 +191,12 @@ export default function ProfilePage() {
                         <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
                             Personal Information
                         </h3>
+
+                        {errorMsg && (
+                            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-500 dark:text-red-400 text-center font-medium">
+                                {errorMsg}
+                            </div>
+                        )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Email */}
@@ -259,12 +309,14 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        <h2 className="mt-8 text-center text-4xl font-bold text-gray-900 dark:text-white">
-                            Changes Saved
+                        <h2 className="mt-8 text-center text-3xl font-bold text-gray-900 dark:text-white">
+                            {isEmailPending ? "Verifikasi Diperlukan" : "Perubahan Disimpan"}
                         </h2>
 
-                        <p className="mt-4 text-center text-gray-500 dark:text-zinc-400">
-                            Your profile settings have been updated.
+                        <p className="mt-4 text-center text-sm text-gray-500 dark:text-zinc-400 leading-relaxed">
+                            {isEmailPending
+                                ? "Profil diperbarui! Silakan periksa email baru Anda untuk memverifikasi perubahan sebelum masuk kembali menggunakan email baru tersebut."
+                                : "Pengaturan profil Anda berhasil diperbarui."}
                         </p>
 
                         <div className="mt-8 flex justify-center">

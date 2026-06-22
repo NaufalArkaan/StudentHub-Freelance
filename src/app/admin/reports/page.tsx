@@ -37,7 +37,25 @@ function ReportsContent() {
 
   const [loading, setLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [reportsData, setReportsData] = React.useState<any[]>([]);
+
+  interface ReportItem {
+    id: string;
+    displayId: string;
+    date: string;
+    entityName: string;
+    entityType: string;
+    entityInitials: string;
+    entityBg: string;
+    reportedBy: string;
+    reason: string;
+    rawReason: string;
+    description: string;
+    urgency: 'critical' | 'minor';
+    status: string;
+    freelancerId: string;
+  }
+
+  const [reportsData, setReportsData] = React.useState<ReportItem[]>([]);
 
   // State untuk Custom Modals
   const [successMsg, setSuccessMsg] = React.useState('');
@@ -119,7 +137,7 @@ function ReportsContent() {
             reason: formattedReason,
             rawReason: r.reason,
             description: r.description,
-            urgency: isCritical ? 'critical' : 'minor',
+            urgency: (isCritical ? 'critical' : 'minor') as 'critical' | 'minor',
             status: r.status || 'pending',
             freelancerId: r.reported_user_id
           };
@@ -127,16 +145,19 @@ function ReportsContent() {
 
         setReportsData(formattedReports);
       }
-    } catch (error: any) {
-      console.error("Gagal menarik data reports:", error);
-      setErrorMsg(error.message || "Gagal memuat data laporan.");
+    } catch (error) {
+      const err = error as Error;
+      console.error("Gagal menarik data reports:", err);
+      setErrorMsg(err.message || "Gagal memuat data laporan.");
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, [supabase, setErrorMsg]);
 
   React.useEffect(() => {
-    fetchReports();
+    Promise.resolve().then(() => {
+      fetchReports();
+    });
   }, [fetchReports]);
 
   // AKSI: Tandai Selesai (Resolve)
@@ -152,9 +173,10 @@ function ReportsContent() {
 
       showSuccess("Laporan telah berhasil ditandai sebagai Selesai (Resolved).");
       fetchReports();
-    } catch (error: any) {
-      console.error("Gagal update status:", error);
-      setErrorMsg("Gagal mengupdate laporan: " + error.message);
+    } catch (error) {
+      const err = error as Error;
+      console.error("Gagal update status:", err);
+      setErrorMsg("Gagal mengupdate laporan: " + err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -190,9 +212,10 @@ function ReportsContent() {
       setBanModal({ isOpen: false, freelancerId: '', entityName: '', reportId: '' });
       showSuccess(`Pengguna "${banModal.entityName}" berhasil diblokir (Suspended). Laporan ini telah ditutup.`);
       fetchReports();
-    } catch (error: any) {
-      console.error("Gagal melakukan Ban:", error);
-      setErrorMsg("Gagal memblokir pengguna: " + error.message);
+    } catch (error) {
+      const err = error as Error;
+      console.error("Gagal melakukan Ban:", err);
+      setErrorMsg("Gagal memblokir pengguna: " + err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -417,7 +440,7 @@ function ReportsContent() {
             </div>
             <div className="p-6">
               <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-                Apakah Anda yakin ingin memblokir akun <span className="font-bold text-slate-900 dark:text-white">"{banModal.entityName}"</span>?
+                Apakah Anda yakin ingin memblokir akun <span className="font-bold text-slate-900 dark:text-white">&quot;{banModal.entityName}&quot;</span>?
                 Pengguna ini tidak akan bisa lagi menawarkan jasa di dalam platform.
               </p>
             </div>

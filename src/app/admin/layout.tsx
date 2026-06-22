@@ -14,10 +14,11 @@ import {
   Moon,
   User,
   ShieldAlert,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 
-export default function AdminLayout({
+function AdminLayoutContent({
   children,
 }: {
   children: React.ReactNode;
@@ -31,8 +32,14 @@ export default function AdminLayout({
   const [searchQuery, setSearchQuery] = React.useState('');
 
   // Notifications State
+  interface AdminNotification {
+    id: string;
+    reason: string;
+    created_at: string;
+  }
+
   const [isNotificationOpen, setIsNotificationOpen] = React.useState(false);
-  const [notifications, setNotifications] = React.useState<any[]>([]);
+  const [notifications, setNotifications] = React.useState<AdminNotification[]>([]);
   const [unreadCount, setUnreadCount] = React.useState(0);
   const notifRef = React.useRef<HTMLDivElement>(null);
 
@@ -46,14 +53,18 @@ export default function AdminLayout({
 
   // Sinkronkan isi kotak input jika URL berubah (misal pindah halaman)
   React.useEffect(() => {
-    setSearchQuery(currentQuery);
+    Promise.resolve().then(() => {
+      setSearchQuery(currentQuery);
+    });
   }, [currentQuery]);
 
   // 1. Logika Tema (Local Storage)
   React.useEffect(() => {
     const savedTheme = localStorage.getItem('admin_theme');
     if (savedTheme) {
-      setIsDark(savedTheme === 'dark');
+      Promise.resolve().then(() => {
+        setIsDark(savedTheme === 'dark');
+      });
     }
   }, []);
 
@@ -425,5 +436,23 @@ export default function AdminLayout({
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#07090e]">
+          <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+        </div>
+      }
+    >
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </React.Suspense>
   );
 }

@@ -107,7 +107,7 @@ export default function OrdersPage() {
               if (!isNaN(parsedDate.getTime())) {
                 formattedDate = parsedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
               }
-            } catch (e) {
+            } catch {
               formattedDate = order.created_at.split(' ')[0] || 'Invalid Date';
             }
           }

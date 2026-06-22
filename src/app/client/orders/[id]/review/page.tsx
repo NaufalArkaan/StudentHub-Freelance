@@ -106,7 +106,6 @@ export default function ReviewPage() {
             const { error } = await supabase.from("reviews").insert({
                 order_id: id,
                 freelancer_id: freelancerInfo.id,
-                service_id: freelancerInfo.serviceId,
                 client_id: user.id,
                 rating: rating,
                 comment: feedback,

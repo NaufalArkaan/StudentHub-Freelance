@@ -25,7 +25,38 @@ export default function AdminOrderDetailPage() {
 
     const [loading, setLoading] = React.useState(true);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const [orderData, setOrderData] = React.useState<any>(null);
+
+    interface OrderDetail {
+        id: string;
+        created_at: string;
+        status: string;
+        price: number;
+        client_id: string;
+        service_id: string;
+        categoryName: string;
+        service: {
+            title: string;
+            description: string;
+            category_id: string;
+            freelancer_id: string;
+        } | null;
+        client: {
+            id: string;
+            full_name: string;
+            nim?: string;
+            avatar_url?: string;
+            phone?: string;
+        } | null;
+        freelancer: {
+            id: string;
+            full_name: string;
+            nim?: string;
+            avatar_url?: string;
+            phone?: string;
+        } | null;
+    }
+
+    const [orderData, setOrderData] = React.useState<OrderDetail | null>(null);
     const [adminNotes, setAdminNotes] = React.useState('');
 
     const fetchOrderDetail = React.useCallback(async () => {
@@ -69,14 +100,14 @@ export default function AdminOrderDetailPage() {
 
             const profileMap = new Map(profiles?.map(p => [p.id, p]));
 
-            const clientProfile = profileMap.get(order.client_id);
-            const freelancerProfile = profileMap.get(order.service?.freelancer_id);
+            const clientProfile = profileMap.get(order.client_id) as OrderDetail['client'];
+            const freelancerProfile = profileMap.get(order.service?.freelancer_id) as OrderDetail['freelancer'];
 
             setOrderData({
                 ...order,
                 categoryName,
-                client: clientProfile,
-                freelancer: freelancerProfile,
+                client: clientProfile || null,
+                freelancer: freelancerProfile || null,
             });
 
         } catch (error) {
@@ -87,7 +118,9 @@ export default function AdminOrderDetailPage() {
     }, [supabase, orderId]);
 
     React.useEffect(() => {
-        fetchOrderDetail();
+        Promise.resolve().then(() => {
+            fetchOrderDetail();
+        });
     }, [fetchOrderDetail]);
 
     // Fungsi Helper untuk Inisial Nama
@@ -115,8 +148,9 @@ export default function AdminOrderDetailPage() {
 
             alert(`Status pesanan berhasil diubah menjadi ${newStatus.toUpperCase()}`);
             fetchOrderDetail(); // Refresh data
-        } catch (error: any) {
-            alert("Gagal memperbarui status: " + error.message);
+        } catch (error) {
+            const err = error as Error;
+            alert("Gagal memperbarui status: " + err.message);
         } finally {
             setIsSubmitting(false);
         }

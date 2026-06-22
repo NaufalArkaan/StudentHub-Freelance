@@ -155,7 +155,6 @@ export default function LandingPage() {
             <div key={index} className="flex flex-col bg-[#0B1121]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:-translate-y-2 hover:border-cyan-500/50 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)] transition-all duration-500 group cursor-pointer">
               <div className="relative h-44 w-full bg-slate-900 overflow-hidden">
                 <div className="absolute inset-0 opacity-20 bg-grid-pattern z-0" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={service.image}
                   alt={service.title}

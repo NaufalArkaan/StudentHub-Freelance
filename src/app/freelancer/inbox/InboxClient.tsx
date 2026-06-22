@@ -1,5 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
-/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import * as React from 'react';
@@ -125,7 +123,7 @@ export default function InboxClient({
   const imageInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
-    setThreads(initialThreads);
+    Promise.resolve().then(() => setThreads(initialThreads));
   }, [initialThreads]);
 
   const scrollToBottom = () => {
@@ -139,7 +137,7 @@ export default function InboxClient({
   }, [messages]);
 
   const fetchMessages = React.useCallback(async (orderId: string) => {
-    setLoadingMsg(true);
+    Promise.resolve().then(() => setLoadingMsg(true));
     try {
       const { data, error } = await supabase
         .from('messages')
@@ -159,7 +157,9 @@ export default function InboxClient({
 
   React.useEffect(() => {
     if (activeThreadId) {
-      fetchMessages(activeThreadId);
+      Promise.resolve().then(() => {
+        fetchMessages(activeThreadId);
+      });
     }
   }, [activeThreadId, fetchMessages]);
 
