@@ -20,16 +20,55 @@ export default function ClientLayout({
   const router = useRouter();
   const supabase = createClient();
 
-  // Check user suspension status on path change and setup real-time subscription
+  // 1. Setup real-time suspension check (once per session/mount)
   React.useEffect(() => {
     let subscription: any = null;
 
-    const checkAndSubscribe = async () => {
+    const setupSubscription = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // 1. Initial check on mount or path change
+        subscription = supabase
+          .channel(`public-users-${user.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'users',
+              filter: `id=eq.${user.id}`,
+            },
+            async (payload: any) => {
+              if (payload.new && payload.new.status === 'suspended') {
+                await supabase.auth.signOut();
+                router.refresh();
+                router.push('/login?error=suspended');
+              }
+            }
+          )
+          .subscribe();
+      } catch (err) {
+        console.error('Error subscribing to suspension status:', err);
+      }
+    };
+
+    setupSubscription();
+
+    return () => {
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
+    };
+  }, [supabase, router]);
+
+  // 2. Check suspension status on route change
+  React.useEffect(() => {
+    const checkSuspension = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
         const { data: dbUser, error } = await supabase
           .from('users')
           .select('status')
@@ -40,43 +79,13 @@ export default function ClientLayout({
           await supabase.auth.signOut();
           router.refresh();
           router.push('/login?error=suspended');
-          return;
-        }
-
-        // 2. Real-time subscription to status updates
-        if (!subscription) {
-          subscription = supabase
-            .channel(`public-users-${user.id}`)
-            .on(
-              'postgres_changes',
-              {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'users',
-                filter: `id=eq.${user.id}`,
-              },
-              async (payload: any) => {
-                if (payload.new && payload.new.status === 'suspended') {
-                  await supabase.auth.signOut();
-                  router.refresh();
-                  router.push('/login?error=suspended');
-                }
-              }
-            )
-            .subscribe();
         }
       } catch (err) {
-        console.error('Error checking suspension status:', err);
+        console.error('Error checking suspension status on route change:', err);
       }
     };
 
-    checkAndSubscribe();
-
-    return () => {
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
-    };
+    checkSuspension();
   }, [supabase, router, pathname]);
 
   React.useEffect(() => {
