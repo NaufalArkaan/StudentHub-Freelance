@@ -250,3 +250,58 @@ drop trigger if exists on_auth_user_updated on auth.users;
 create trigger on_auth_user_updated
   after update of email on auth.users
   for each row execute procedure public.handle_update_user();
+
+-- RESET USER PASSWORD WITHOUT EMAIL (FOR DEVELOPMENT/Bypass)
+CREATE OR REPLACE FUNCTION public.reset_user_password_without_email(
+  p_email TEXT,
+  p_nim TEXT,
+  p_full_name TEXT,
+  p_new_password TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth, extensions
+AS $$
+DECLARE
+  v_user_id UUID;
+  v_role user_role;
+  v_profile_nim TEXT;
+  v_profile_name TEXT;
+BEGIN
+  -- 1. Find user by email
+  SELECT id, role INTO v_user_id, v_role
+  FROM public.users
+  WHERE email = p_email;
+  
+  IF NOT FOUND THEN
+    RETURN FALSE;
+  END IF;
+  
+  -- 2. Fetch profile info
+  SELECT nim, full_name INTO v_profile_nim, v_profile_name
+  FROM public.profiles
+  WHERE id = v_user_id;
+  
+  -- 3. Verify based on role
+  IF v_role = 'freelancer'::user_role THEN
+    -- For freelancer, NIM must match and not be null/empty
+    IF p_nim IS NULL OR p_nim = '' OR v_profile_nim IS NULL OR v_profile_nim <> p_nim THEN
+      RETURN FALSE;
+    END IF;
+  ELSE
+    -- For client/admin, Full Name must match (case-insensitive check)
+    IF p_full_name IS NULL OR p_full_name = '' OR v_profile_name IS NULL OR LOWER(v_profile_name) <> LOWER(p_full_name) THEN
+      RETURN FALSE;
+    END IF;
+  END IF;
+  
+  -- 4. Update the password in auth.users using bcrypt
+  UPDATE auth.users
+  SET encrypted_password = extensions.crypt(p_new_password, extensions.gen_salt('bf')),
+      updated_at = now()
+  WHERE id = v_user_id;
+  
+  RETURN TRUE;
+END;
+$$;

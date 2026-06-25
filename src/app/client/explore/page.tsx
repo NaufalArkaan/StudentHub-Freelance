@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Search, Compass } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { getCategoryImage } from '@/lib/images';
 
 // 1. UBAH DI SINI: 'title' diganti jadi 'name' menyesuaikan database Anda
 type Category = {
@@ -149,7 +150,7 @@ function ExplorePageContent() {
                 >
                   {/* Background Image */}
                   <Image
-                    src={category.image_url || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop'}
+                    src={category.image_url || getCategoryImage(category.name, category.slug)}
                     alt={category.name || 'Category'}
                     fill
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"

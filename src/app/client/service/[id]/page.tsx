@@ -7,6 +7,7 @@ import { ChevronLeft, Star, Clock, RefreshCw, MessageSquare } from 'lucide-react
 import PaymentModal from './components/PaymentModal';
 import PaymentSuccessModal from './components/PaymentSuccessModal';
 import { createClient } from '@/lib/supabase/client';
+import { getServiceImage } from '@/lib/images';
 
 // ============================================================================
 // 1. DATA TYPES 
@@ -74,7 +75,8 @@ export default function ServiceDetailPage() {
                     .from('services')
                     .select(`
                         *,
-                        profiles (full_name, avatar_url)
+                        profiles (full_name, avatar_url),
+                        categories (name, slug)
                     `)
                     .eq('id', id)
                     .single();
@@ -138,7 +140,7 @@ export default function ServiceDetailPage() {
                         id: serviceData.id,
                         title: serviceData.title || serviceData.name || 'Untitled Service',
                         description: serviceData.description || 'Freelancer belum menambahkan deskripsi untuk layanan ini.',
-                        image: serviceData.image_url || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070&auto=format&fit=crop",
+                        image: serviceData.image_url || getServiceImage(serviceData.title || serviceData.name || '', (serviceData as any).categories?.name || '', (serviceData as any).categories?.slug || '', serviceData.id),
                         price: serviceData.price || 0,
                         deliveryDays: serviceData.delivery_time || 3,
                         revisions: 2,

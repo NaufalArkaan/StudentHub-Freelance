@@ -148,16 +148,20 @@ function AdminLayoutContent({
   }, []);
 
   // 5. PERBAIKAN LOGIKA SEARCH: Saring langsung di halaman aktif lewat URL Query
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    const trimmed = val.trim();
+    if (trimmed !== '') {
+      router.replace(`${pathname}?q=${encodeURIComponent(trimmed)}`);
+    } else {
+      router.replace(pathname);
+    }
+  };
+
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      if (searchQuery.trim() !== '') {
-        // Ubah URL halaman aktif saat ini dengan parameter ?q=
-        router.push(`${pathname}?q=${encodeURIComponent(searchQuery.trim())}`);
-      } else {
-        // Jika kosong, bersihkan parameter pencarian dari URL
-        router.push(pathname);
-      }
       setIsMobileMenuOpen(false);
+      e.currentTarget.blur();
     }
   };
 
@@ -250,9 +254,9 @@ function AdminLayoutContent({
               </span>
               <input
                 type="text"
-                placeholder="Type and press Enter..."
+                placeholder="Cari..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 onKeyDown={handleSearchKeyPress}
                 className={`w-full h-9 rounded-lg pl-9 pr-4 text-xs focus:outline-none transition-all ${isDark
                   ? 'bg-slate-900 border border-slate-800 text-slate-300 placeholder-slate-500 focus:border-cyan-500/50'
@@ -400,9 +404,9 @@ function AdminLayoutContent({
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 onKeyDown={handleSearchKeyPress}
-                placeholder="Press Enter to search..."
+                placeholder="Cari..."
                 className={`w-full h-10 rounded-lg pl-10 pr-4 text-sm focus:outline-none transition-all ${isDark
                   ? 'bg-slate-900 border border-slate-800 text-slate-300 placeholder-slate-500'
                   : 'bg-slate-100 border border-slate-200 text-slate-900 placeholder-slate-400'

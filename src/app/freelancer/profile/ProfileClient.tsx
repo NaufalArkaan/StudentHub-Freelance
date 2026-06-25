@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, User as UserIcon, Briefcase, FileText, Loader2, Trash2, RefreshCcw, Edit2, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, User as UserIcon, Briefcase, FileText, Loader2, Trash2, RefreshCcw, Edit2, X, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -373,21 +373,40 @@ export default function ProfileClient({
               const isPdf = portfolio.file_url?.toLowerCase().endsWith('.pdf');
               return (
                 <div key={portfolio.id} className="relative group rounded-2xl overflow-hidden h-56 border border-slate-200 shadow-sm bg-slate-100">
-                  <button onClick={() => confirmDeletePortfolio(portfolio.id)} className="absolute top-3 right-3 z-10 p-2 bg-white/90 hover:bg-red-500 hover:text-white text-slate-600 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      confirmDeletePortfolio(portfolio.id);
+                    }}
+                    className="absolute top-3 right-3 z-30 p-2 bg-white/90 hover:bg-red-500 hover:text-white text-slate-600 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm cursor-pointer"
+                    title="Hapus Portofolio"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  {isPdf ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center">
-                      <FileText className="w-16 h-16 text-slate-400 mb-3" />
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Dokumen PDF</span>
+                  <a
+                    href={portfolio.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full h-full cursor-pointer relative"
+                  >
+                    {isPdf ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900">
+                        <FileText className="w-16 h-16 text-slate-400 mb-3" />
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Dokumen PDF</span>
+                      </div>
+                    ) : (
+                      <img src={portfolio.file_url || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c'} alt={portfolio.title} onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1555066931-4365d14bab8c' }} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    )}
+                    
+                    <div className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300 z-10">
+                      <ExternalLink className="w-6 h-6 text-white drop-shadow-md" />
                     </div>
-                  ) : (
-                    <img src={portfolio.file_url || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c'} alt={portfolio.title} onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1555066931-4365d14bab8c' }} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                  <div className="absolute bottom-5 left-5 right-5 pointer-events-none">
-                    <h3 className="text-white font-bold text-sm truncate drop-shadow-md">{portfolio.title}</h3>
-                  </div>
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
+                    <div className="absolute bottom-5 left-5 right-5 pointer-events-none z-20">
+                      <h3 className="text-white font-bold text-sm truncate drop-shadow-md">{portfolio.title}</h3>
+                    </div>
+                  </a>
                 </div>
               );
             })}

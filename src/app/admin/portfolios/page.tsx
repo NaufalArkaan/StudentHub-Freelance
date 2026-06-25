@@ -34,6 +34,7 @@ export default function AdminPortfoliosPage() {
 function PortfolioContent() {
   const searchParams = useSearchParams();
   const userId = searchParams.get('userId');
+  const searchQuery = (searchParams.get('q') || '').toLowerCase();
   const router = useRouter();
   const supabase = createClient();
 
@@ -57,6 +58,7 @@ function PortfolioContent() {
     category?: string;
     description?: string;
     image_url?: string;
+    file_url?: string;
     link?: string;
     url?: string;
     project_url?: string;
@@ -184,42 +186,52 @@ function PortfolioContent() {
   };
 
   const handleOpenPortfolio = (port: PortfolioItem) => {
-    const externalLink = port.link || port.url || port.project_url || port.portfolio_url;
+    const fileLink = port.file_url || port.link || port.url || port.project_url || port.portfolio_url;
 
-    if (externalLink) {
-      window.open(externalLink, '_blank', 'noopener,noreferrer');
-    } else {
-      setInfoConfig({
-        isOpen: true,
-        title: 'Detail Proyek Portofolio',
-        content: (
-          <div className="space-y-4">
-            <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Judul Proyek</p>
-              <p className="text-sm font-medium text-slate-900 dark:text-white mt-1">{port.title || 'Tanpa Judul'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kategori</p>
-              <p className="text-sm font-medium text-slate-900 dark:text-white mt-1">{port.category || 'Desain'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Deskripsi</p>
-              <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg mt-1 border border-slate-100 dark:border-slate-800">
-                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-                  {port.description || 'Freelancer tidak menyertakan deskripsi detail untuk proyek ini.'}
-                </p>
-              </div>
-            </div>
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 mt-4">
-              <p className="text-[10px] text-amber-600 dark:text-amber-500 flex items-center gap-1.5 font-medium">
-                <AlertCircle className="w-3.5 h-3.5" />
-                Catatan: Tidak ada tautan eksternal (link) yang disematkan pada proyek ini.
+    setInfoConfig({
+      isOpen: true,
+      title: 'Detail Proyek Portofolio',
+      content: (
+        <div className="space-y-4">
+          <div>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Judul Proyek</p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white mt-1">{port.title || 'Tanpa Judul'}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kategori</p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white mt-1">{port.category || 'Desain'}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Deskripsi</p>
+            <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg mt-1 border border-slate-100 dark:border-slate-800">
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                {port.description || 'Freelancer tidak menyertakan deskripsi detail untuk proyek ini.'}
               </p>
             </div>
           </div>
-        )
-      });
-    }
+          {fileLink ? (
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <a
+                href={fileLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-cyan-500 hover:bg-cyan-600 dark:bg-[#00d8ff] dark:hover:bg-cyan-400 dark:text-slate-950 px-4 py-2 rounded-lg transition-colors shadow-sm cursor-pointer"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Lihat File / Link Portofolio
+              </a>
+            </div>
+          ) : (
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 mt-4">
+              <p className="text-[10px] text-amber-600 dark:text-amber-500 flex items-center gap-1.5 font-medium">
+                <AlertCircle className="w-3.5 h-3.5" />
+                Catatan: Tidak ada tautan file yang disematkan pada proyek ini.
+              </p>
+            </div>
+          )}
+        </div>
+      )
+    });
   };
 
   const mockupStyles = [
@@ -320,13 +332,26 @@ function PortfolioContent() {
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {portfolios.length === 0 ? (
-                <div className="col-span-3 py-10 text-center text-slate-500 text-sm border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-                  Freelancer ini belum memiliki item portofolio yang diunggah.
-                </div>
-              ) : (
-                portfolios.map((port, idx) => {
+              {(() => {
+                const filteredPortfolios = portfolios.filter(p => {
+                  if (!searchQuery) return true;
+                  const matchTitle = p.title?.toLowerCase().includes(searchQuery);
+                  const matchDesc = p.description?.toLowerCase().includes(searchQuery);
+                  const matchCategory = p.category?.toLowerCase().includes(searchQuery);
+                  return matchTitle || matchDesc || matchCategory;
+                });
+
+                if (filteredPortfolios.length === 0) {
+                  return (
+                    <div className="col-span-3 py-10 text-center text-slate-500 text-sm border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                      {searchQuery ? `Hasil pencarian "${searchQuery}" tidak ditemukan.` : 'Freelancer ini belum memiliki item portofolio yang diunggah.'}
+                    </div>
+                  );
+                }
+
+                return filteredPortfolios.map((port, idx) => {
                   const style = mockupStyles[idx % mockupStyles.length];
+                  const hasImage = port.file_url && !port.file_url.toLowerCase().endsWith('.pdf');
 
                   return (
                     <div
@@ -336,14 +361,14 @@ function PortfolioContent() {
                       title="Klik untuk melihat detail portofolio"
                     >
                       <div className="h-32 bg-slate-50 dark:bg-[#080d16] flex items-center justify-center border-b border-slate-200 dark:border-slate-900 relative overflow-hidden">
-                        {port.image_url ? (
-                          <img src={port.image_url} alt={port.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        {hasImage ? (
+                          <img src={port.file_url} alt={port.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         ) : (
                           <>
                             <div className={`absolute inset-0 bg-gradient-to-br ${style.bg}`} />
                             {style.icon}
                             <div className="absolute bottom-2 left-2 text-[8px] bg-white/80 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 font-mono px-1 rounded backdrop-blur-sm border border-slate-200/50 dark:border-transparent">
-                              {style.label}
+                              {port.file_url?.toLowerCase().endsWith('.pdf') ? 'PDF DOKUMEN' : style.label}
                             </div>
                           </>
                         )}
@@ -362,9 +387,9 @@ function PortfolioContent() {
                         </div>
                       </div>
                     </div>
-                  )
-                })
-              )}
+                  );
+                });
+              })()}
             </div>
 
             <Card className="border-slate-200 dark:border-slate-900 bg-white dark:bg-[#0c1222]/50 p-6 space-y-6 shadow-sm dark:shadow-none">

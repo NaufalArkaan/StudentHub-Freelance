@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { ChevronLeft, ChevronDown, Heart, Star, Terminal } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { getServiceImage } from '@/lib/images';
 
 const categoryConfig: Record<string, { title: string; desc: string }> = {
     'programming-tech': {
@@ -118,7 +119,7 @@ export default function ClientExplore() {
                         price: `Rp ${(srv.price || 0).toLocaleString('id-ID')}`,
                         priceNum: srv.price || 0,
                         deliveryDays: srv.delivery_time || 3,
-                        coverImage: srv.image_url || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop',
+                        coverImage: srv.image_url || getServiceImage(srv.title || srv.name || '', categoryName, categorySlug, srv.id),
                         tag: srv.tag || 'General',
                     }));
 
@@ -135,7 +136,7 @@ export default function ClientExplore() {
         };
 
         fetchServices();
-    }, [supabase, categorySlug]);
+    }, [supabase, categorySlug, categoryName]);
 
     // 4. LOGIKA FILTER & SORTING
     const techStacks = ['All', ...Array.from(new Set(services.map((s) => s.tag)))];
